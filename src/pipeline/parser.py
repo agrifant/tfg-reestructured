@@ -356,5 +356,7 @@ def getDatos(boe_file, documento):
         num=ext.extract_articulo(articulo["titulo_articulo"])
         if num is not None:
             articulo["num_articulo"]=num
+            
+        articulo["estado"]="vigente"
     
     return articulos, disposiciones, texto_extra, datos_globales, materias

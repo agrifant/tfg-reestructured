@@ -8,7 +8,7 @@ import json
 import os
 # python3 -m src.pipeline.pipeline
 
-def pipeline(documento: str, delete_derrogations:bool, unificated_versions:bool)-> tuple:
+def pipeline(documento: str, unificated_versions:bool)-> tuple:
     """
         Procesa un documento BOE y genera chunks de los textos relevantes para análisis o almacenamiento.
 
@@ -120,8 +120,7 @@ def pipeline(documento: str, delete_derrogations:bool, unificated_versions:bool)
     """
 
     to_delete=[]
-    if delete_derrogations:
-        to_delete.extend(der.main_derrogate(disposiciones))
+    to_delete.extend(der.main_derrogate(disposiciones))
             
     if unificated_versions:
         print("unificando")

@@ -74,6 +74,9 @@ class bdController():
             return True
         return False
 
+    def changeMetadata(self, data, type_metadata, new_value):
+        return self.bd_chroma.changeMetadata(data, type_metadata, new_value)    
+
     def deleteFromMetadata(self, data):
         try:
             if not data:
@@ -113,7 +116,7 @@ class bdController():
         boes_inserted=self.get_boe_documents_inserted()
         return list(boes_inserted)
 
-    def retrieval(self, query, n):
+    def retrieval(self, query, n, threshold):
         ids, scores = self.bd_chroma.semanticSearch(query, n)
         score_map = {i: s for i, s in zip(ids, scores)}
 
@@ -131,9 +134,12 @@ class bdController():
                         score_map[i] += 0.2  
                     else:
                         score_map[i] = s + 0.2
-
-
-        final_ids = sorted(score_map, key=score_map.get, reverse=True)[:n]
+            
+        final_ids = sorted(
+            (k for k, v in score_map.items() if v >= threshold),
+            key=score_map.get,
+            reverse=True
+        )[:n]
 
         data = self.bd_chroma.getDataNode(final_ids) if final_ids else []
         return "\n\n".join(data)

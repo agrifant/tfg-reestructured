@@ -52,6 +52,50 @@ class chroma():
         self.client.get_or_create_collection(self.collection_name)
         return True
 
+    def changeMetadata(self, data, type_metadata, new_value):
+        try:
+            if not data:
+                return False
+    
+            # 1. Build where
+            if len(data) == 1:
+                where_clause = data[0]
+            else:
+                where_clause = {"$and": data}
+    
+            collection = self.get_collection()
+    
+            # 2. Get docs
+            results = collection.get(
+                where=where_clause,
+                include=["metadatas"]
+            )
+    
+            ids = results.get("ids", [])
+            metadatas = results.get("metadatas", [])
+    
+            # 3. Safety check (IMPORTANTE)
+            if not ids or not metadatas:
+                return False
+    
+            # 4. Update metadata
+            new_metadatas = [
+                {**meta, type_metadata: new_value}
+                for meta in metadatas
+            ]
+    
+            # 5. Update Chroma
+            collection.update(
+                ids=ids,
+                metadatas=new_metadatas
+            )
+    
+            return True
+    
+        except Exception as e:
+            print(f"Error cambiando metadata: {e}")
+            return False
+
     def deleteFromMetadata(self, where):
         try:
             collection = self.get_collection()
@@ -88,6 +132,7 @@ class chroma():
             results = collection.query(
                 query_embeddings=[query_embedding],
                 n_results=n_results,
+                 where={"estado": "vigente"},
                 include=["distances"]
             )
 
@@ -102,6 +147,15 @@ class chroma():
 
     def semanticSearchArticle(self, query: str, where_filter, n_results: int = 1)-> tuple[list[str], list[float]]:
         try:
+            base_conditions = []
+
+            if where_filter:
+                base_conditions.append(where_filter)
+            
+            base_conditions.append({"estado": "vigente"})
+            
+            where = {"$and": base_conditions}
+            
             collection = self.get_collection()
 
             query_embedding = embedding.content_to_embedding(query)
@@ -110,7 +164,7 @@ class chroma():
                 query_embeddings=[query_embedding],
                 n_results=n_results,
                 include=["distances"],
-                where=where_filter if where_filter else None  # 👈 aquí el filtro
+                where=where
             )
 
             ids = results["ids"][0]

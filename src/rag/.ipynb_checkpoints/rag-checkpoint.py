@@ -8,15 +8,17 @@ class rag():
         self.nRetrieval=5
         self.delete_derrogations=delete
         self.unificated_versions=unificate
-        self.minumun_theshold=threshold
+        self.min_theshold=threshold
         
 
     def newBoeDocument(self, idDocument: str)-> None:
         #Obtenemos los datos del pipeline de estracción de datos
-        datos_globales, articulos_chunked, disposiciones_chunked, texto_extra_chunked, to_delete=pipeline.pipeline(idDocument, self.delete_derrogations, self.unificated_versions)
+        datos_globales, articulos_chunked, disposiciones_chunked, texto_extra_chunked, derogaciones=pipeline.pipeline(idDocument, self.unificated_versions)
 
-        for delete in to_delete:
-            self.BD.deleteFromMetadata(delete)
+        if self.delete_derrogations:
+            if derogaciones != []:
+                for derogacion in derogaciones:
+                    self.BD.changeMetadata(derogacion, "estado", "derrogado")
 
         # Guardamos los datos en la base de datos 
         out= self.BD.addDocument(datos_globales, articulos_chunked, disposiciones_chunked, texto_extra_chunked)
@@ -40,11 +42,14 @@ class rag():
 
     def preguntar(self, query: str, is_testing=False)-> str:
         #Obtenemos los documentos de la BD
-        texts=self.BD.retrieval(query, self.nRetrieval)
-        
+        texts=self.BD.retrieval(query, self.nRetrieval, self.min_theshold)
+
         #llamamos al llm
         if is_testing:
             return callToLLM.make_rag_question(query, texts), texts
         else:
             return callToLLM.make_rag_question(query, texts)
+
+    def change_min_theshold(self, theshold):
+        self.min_theshold=theshold
         
