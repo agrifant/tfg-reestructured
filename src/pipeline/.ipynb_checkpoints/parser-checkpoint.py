@@ -99,11 +99,11 @@ def obtenerArticulos(boe_XML: BytesIO, boe: str)-> tuple[list[dict], list[dict],
     lineas = utils.extraer_texto_completo(texto_completo)
 
     #Sobre cada linea <p>
-    for _, atributo, texto in lineas:
-
+    for elem, atributo, texto in lineas:
+        bq = utils.is_in_blockquote(elem)
         texto=utils.normalizar_texto(texto)
         # Comienza un nuevo artículo
-        if atributo == "articulo":
+        if atributo == "articulo" and bq==False:
             documento.cambioTipoTexto(tipoTexto.ARTICULO)
             #Estructura mínima
             documento.current_articulo = {
@@ -211,7 +211,7 @@ def obtenerArticulos(boe_XML: BytesIO, boe: str)-> tuple[list[dict], list[dict],
         
     #Separamos los artículos y las disposiciones
     articulos, disposiciones = separarArticulosDisposiciones(documento.list_articulos, boe)
-    
+
     return articulos, disposiciones,  documento.list_extra
 
 def separarArticulosDisposiciones(lista_datos: list[dict], boe: str) -> tuple[list[dict], list[dict]]:
@@ -345,11 +345,6 @@ def obtenerDatosGlobales(boe_XML: BytesIO)->tuple[dict, dict]:
 def getDatos(boe_file, documento):
     articulos, disposiciones, texto_extra = obtenerArticulos(boe_file, documento)
     datos_globales, materias = obtenerDatosGlobales(boe_file)
-
-    #Comprobamos si es un artículo unico y creamos nuevos si fueran necesarios
-    for articulo in articulos:
-        if utils.is_articulo_unico(articulo):
-            articulos=utils.separarTexto(articulo)
 
     #Tratamos los artículos para guardar el específico
     for articulo in articulos:

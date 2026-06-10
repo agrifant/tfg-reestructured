@@ -12,16 +12,8 @@ class rag():
         
 
     def newBoeDocument(self, idDocument: str)-> None:
-        #Obtenemos los datos del pipeline de estracción de datos
-        datos_globales, articulos_chunked, disposiciones_chunked, texto_extra_chunked, derogaciones=pipeline.pipeline(idDocument, self.unificated_versions)
-
-        if self.delete_derrogations:
-            if derogaciones != []:
-                for derogacion in derogaciones:
-                    self.BD.changeMetadata(derogacion, "estado", "derrogado")
-
-        # Guardamos los datos en la base de datos 
-        out= self.BD.addDocument(datos_globales, articulos_chunked, disposiciones_chunked, texto_extra_chunked)
+        #Ejecutamos el pipeline
+        out = pipeline.pipeline(idDocument, self.BD,  self.delete_derrogations, self.unificated_versions)
 
         if out==True:
             print("Texto añadido con éxito")

@@ -2,13 +2,14 @@ from . import fetcher as fetcher
 from . import parser as parser
 from . import chunking as chunking
 from . import derrogate as der
+from . import unificate as un
 import src.pipeline.utils as utils
 
 import json
 import os
 # python3 -m src.pipeline.pipeline
 
-def pipeline(documento: str, unificated_versions:bool)-> tuple:
+def pipeline(documento: str, BD, delete_derrogations, unificated_versions)-> tuple:
     """
         Procesa un documento BOE y genera chunks de los textos relevantes para análisis o almacenamiento.
 
@@ -54,6 +55,11 @@ def pipeline(documento: str, unificated_versions:bool)-> tuple:
     boe_file.close()
     del boe_file
 
+    if unificated_versions:
+        print("unificando")
+        un.main_unificate(articulos)
+        un.main_unificate(disposiciones)
+
     #Hacemos chunking sobre los datos que nos interesan
     articulos_chunked=[]
     disposiciones_chunked=[]
@@ -93,7 +99,7 @@ def pipeline(documento: str, unificated_versions:bool)-> tuple:
     
     
     #Irelevante
-    """
+    #"""
     os.makedirs("data", exist_ok=True)
     
     with open(f"data/articulos{documento}.json", "w", encoding="utf-8") as f:
@@ -117,16 +123,20 @@ def pipeline(documento: str, unificated_versions:bool)-> tuple:
     
     with open(f"data/datos_globales{documento}.json", "w", encoding="utf-8") as f:
         json.dump(datos_globales, f, ensure_ascii=False, indent=2)
-    """
+    #"""
 
-    to_delete=[]
-    to_delete.extend(der.main_derrogate(disposiciones))
-            
-    if unificated_versions:
-        print("unificando")
+    if delete_derrogations:
+        #Obtenemos el metadata de todos los chunks que hay que derrogar
+        derrogate=der.main_derrogate(disposiciones)
+
+        #Cambiamos de la metadata el estado a derrogado
+        if derrogate != []:
+                for i in derrogate:
+                    BD.changeMetadata(i, "estado", "derrogado")
+
+    out=BD.addDocument(datos_globales, articulos_chunked, disposiciones_chunked, texto_extra_chunked)
     
-    
-    return datos_globales, articulos_chunked, disposiciones_chunked, texto_extra_chunked, to_delete
+    return out
 
 def generarContextoPreguntas(documento:str)->list:
     #Función que obtiene el boe que queremos

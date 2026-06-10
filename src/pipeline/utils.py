@@ -30,24 +30,26 @@ def limpiarPalabras(tree):
                 elem.tail = elem.tail.replace(palabra, "")
     return tree
 
-def extraer_texto_completo(texto_completo):
-    """
-    Devuelve una lista de tuplas (tag, class, texto_plano)
-    Recorre todos los elementos dentro de <texto> sin mezclar el texto del padre.
-    """
-    lineas = []
-    
-    # Recorremos todos los hijos directos de <texto>
-    for elem in texto_completo.iter():
-        # Saltamos el nodo raíz para no concatenar todo
-        if elem is texto_completo:
-            continue
+def is_in_blockquote(elem):
+    parent = elem.getparent()
 
+    while parent is not None:
+        if parent.tag in {"blockquote", "cita"}:
+            return True
+        parent = parent.getparent()
+
+    return False
+
+def extraer_texto_completo(texto_completo):
+    lineas = []
+
+    for elem in texto_completo.findall(".//p"):
         texto = ''.join(elem.itertext()).strip()
+
         if texto:
-            atributo = elem.get("class")  # None si no tiene
-            lineas.append((elem.tag, atributo, texto))
-    
+            atributo = elem.get("class")
+            lineas.append((elem, atributo, texto))
+
     return lineas
 
 def get_unique_text(datos, identificador):
