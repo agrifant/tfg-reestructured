@@ -1,8 +1,14 @@
 from datetime import datetime
 import re
 import unicodedata
+import src.extractArticulo as ext
 
 palabras=["[ignorar]", "[cabezera]", "[encabezado]"]
+
+def extraer_ley(texto: str):
+    patron = r"\b\d+/\d{4}\b"
+    match = re.search(patron, texto)
+    return match.group(0) if match else None
 
 def normalizarFecha(fecha):
     return datetime.strptime(fecha, "%Y%m%d").strftime("%Y-%m-%d")
@@ -96,12 +102,6 @@ def crear_diccionarios(elementos):
     
     return resultado
 
-def is_articulo_unico(diccionario: dict)->bool:
-    regex = r"(?i)\bart[ií]culo\s+[uú]nico\.?"
-
-    texto = diccionario.get("titulo_articulo", "")
-    return bool(list(re.finditer(regex, texto,flags=re.IGNORECASE)))
-
 def separarTexto(dict):
     texto=dict["cuerpo"]
     texto=separarTextoCoincidenciaTitulo(texto)
@@ -154,25 +154,30 @@ def separarTitulo(texto):
 
     return titulo, argumento
 
-def enriquecerTextos(data: dict, datos_globales, materias):
+def enriquecerTextos(data: dict, datos_globales):
     titulo_ley = datos_globales.get("titulo", "")
 
     titulo_ley = descriptor_simple(titulo_ley)
-    #temas = ", ".join(materias) if materias else ""
     articulo = data.get("titulo_articulo", "")
     texto = data.get("cuerpo", "")
 
     
     partes = [
         f"{titulo_ley}" if titulo_ley else "",
-        #f"Materias: {temas}" if temas else "",
-        #f"Artículo {articulo}" if articulo else "",
         texto
     ]
 
     embedding_text = "\n".join([p for p in partes if p])
 
     return embedding_text
+
+def makeEnriquecerTextos(diccionario, datos_globales):
+    for dic in diccionario:
+        dic["cuerpo"] = enriquecerTextos(
+            dic,
+            datos_globales
+        )
+    return diccionario
 
 def descriptor_simple(texto):
     corte_punto = texto.split(".")[0]
@@ -181,4 +186,51 @@ def descriptor_simple(texto):
     
     palabras = frase.lower().split()
     return " ".join(palabras)
+
+def addMetadata(articulos, disposiciones, textos_extras, datos_globales):
+    #Añadimos la metadata de estado a todos. estado="vigente" y de los datos globales
+    for disposicion in disposiciones:
+        #Estado
+        disposicion["estado"]="vigente"
+
+        #Datos globales
+        disposicion["id_boe"]=datos_globales["id_boe"]
+        disposicion["url_pdf"]=datos_globales["url_pdf"]
+        disposicion["tipo_norma"]=datos_globales["tipo_norma"]
+        disposicion["fecha_disposicion"]=datos_globales["fecha_disposicion"]
+        disposicion["titulo_norma"]=datos_globales["titulo_norma"]
+        disposicion["numero_norma"]=datos_globales["numero_norma"]
+        disposicion["fecha_publicacion"]=datos_globales["fecha_publicacion"]
+
+    for texto in textos_extras:
+        #Estado
+        texto["estado"]="vigente"
+
+        #Datos globales
+        texto["id_boe"]=datos_globales["id_boe"]
+        texto["url_pdf"]=datos_globales["url_pdf"]
+        texto["tipo_norma"]=datos_globales["tipo_norma"]
+        texto["fecha_disposicion"]=datos_globales["fecha_disposicion"]
+        texto["titulo_norma"]=datos_globales["titulo_norma"]
+        texto["numero_norma"]=datos_globales["numero_norma"]
+        texto["fecha_publicacion"]=datos_globales["fecha_publicacion"]
+
+    
+    for articulo in articulos:
+        #Estado
+        articulo["estado"]="vigente"
+
+        #Datos globales
+        articulo["id_boe"]=datos_globales["id_boe"]
+        articulo["url_pdf"]=datos_globales["url_pdf"]
+        articulo["tipo_norma"]=datos_globales["tipo_norma"]
+        articulo["fecha_disposicion"]=datos_globales["fecha_disposicion"]
+        articulo["titulo_norma"]=datos_globales["titulo_norma"]
+        articulo["numero_norma"]=datos_globales["numero_norma"]
+        articulo["fecha_publicacion"]=datos_globales["fecha_publicacion"]
+        
+        #Para los artículos, pueden tener un la metadata num_articulo que es opcional
+        num=ext.extract_articulo(articulo["titulo"])
+        if num is not None:
+            articulo["num_articulo"]=num
 

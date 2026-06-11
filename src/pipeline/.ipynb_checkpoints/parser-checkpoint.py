@@ -2,7 +2,6 @@ from lxml import etree
 from . import utils as utils
 from enum import Enum
 from io import BytesIO
-import src.extractArticulo as ext
 
 class tipoTexto(Enum):
     """
@@ -107,11 +106,11 @@ def obtenerArticulos(boe_XML: BytesIO, boe: str)-> tuple[list[dict], list[dict],
             documento.cambioTipoTexto(tipoTexto.ARTICULO)
             #Estructura mínima
             documento.current_articulo = {
-                "titulo_articulo": texto,
+                "titulo": texto,
                 "cuerpo": ""
             }
 
-            utils.adjuntarDiccionarioCompuesto(libro_num, libro_tit, "titulo", documento.current_articulo)
+            utils.adjuntarDiccionarioCompuesto(libro_num, libro_tit, "titulo_libro", documento.current_articulo)
             utils.adjuntarDiccionarioCompuesto(apartado_num, apartado_tit, "apartado", documento.current_articulo)
             utils.adjuntarDiccionarioCompuesto(capitulo_num, capitulo_tit, "capitulo", documento.current_articulo)
             utils.adjuntarDiccionarioSimple(seccion, "seccion", documento.current_articulo)
@@ -193,7 +192,7 @@ def obtenerArticulos(boe_XML: BytesIO, boe: str)-> tuple[list[dict], list[dict],
                 "cuerpo": texto
             }
 
-            utils.adjuntarDiccionarioCompuesto(libro_num, libro_tit, "titulo", documento.current_extra)
+            utils.adjuntarDiccionarioCompuesto(libro_num, libro_tit, "titulo_libro", documento.current_extra)
             utils.adjuntarDiccionarioCompuesto(apartado_num, apartado_tit, "apartado", documento.current_extra)
             utils.adjuntarDiccionarioCompuesto(capitulo_num, capitulo_tit, "capitulo", documento.current_extra)
             utils.adjuntarDiccionarioSimple(seccion, "seccion", documento.current_extra)
@@ -257,21 +256,8 @@ def isDisposicion(diccionario: dict) -> bool:
     Returns:
         bool: True si el elemento es una disposición, False en caso contrario.
     """
-    titulo = diccionario.get("titulo_articulo", "").lower()
+    titulo = diccionario.get("titulo", "").lower()
     return titulo.startswith("disposición") or titulo.startswith("[precepto]")
-
-def isArticulo(diccionario: dict) -> bool:
-    """
-    Determina si un diccionario corresponde a un artículo del BOE.
-
-    Args:
-        diccionario (dict): Diccionario que contiene los datos de un elemento del BOE.
-
-    Returns:
-        bool: True si el elemento es un artículo, False en caso contrario.
-    """
-    titulo = diccionario.get("titulo_articulo", "").lower()
-    return titulo.startswith("artículo")
 
 def obtenerDatosGlobales(boe_XML: BytesIO)->tuple[dict, dict]:
     """
@@ -295,7 +281,7 @@ def obtenerDatosGlobales(boe_XML: BytesIO)->tuple[dict, dict]:
     # En <analisis> se encunetra tanto <materias> como <notas>
     # Siendo buenos datos extra para recabar
     analisis = root.find("analisis")
-    materias = analisis.find("materias") if analisis is not None else None
+    #materias = analisis.find("materias") if analisis is not None else None
     notas = analisis.find("notas") if analisis is not None else None
 
 
@@ -313,7 +299,7 @@ def obtenerDatosGlobales(boe_XML: BytesIO)->tuple[dict, dict]:
         "numero_norma": utils.get_unique_text(metadatos, "numero_oficial") ,
 
         # EL título que tiene la norma
-        "titulo": utils.get_unique_text(metadatos, "titulo"),
+        "titulo_norma": utils.get_unique_text(metadatos, "titulo"),
 
         # Url para ver la norma en pdf
         "url_pdf": "https://www.boe.es" + utils.get_unique_text(metadatos, "url_pdf") ,
@@ -336,22 +322,14 @@ def obtenerDatosGlobales(boe_XML: BytesIO)->tuple[dict, dict]:
     texto_notas= utils.get_multiple_text(notas, "nota")
 
     # Apartado donde se indican las competencias relacionadas con la norma
-    texto_materias= utils.get_multiple_text(materias, "materia")
+    #texto_materias= utils.get_multiple_text(materias, "materia")
     
     utils.adjuntarDiccionarioSimple(texto_notas, "notas", datos_globales)
     
-    return datos_globales, texto_materias
+    return datos_globales
 
 def getDatos(boe_file, documento):
     articulos, disposiciones, texto_extra = obtenerArticulos(boe_file, documento)
-    datos_globales, materias = obtenerDatosGlobales(boe_file)
-
-    #Tratamos los artículos para guardar el específico
-    for articulo in articulos:
-        num=ext.extract_articulo(articulo["titulo_articulo"])
-        if num is not None:
-            articulo["num_articulo"]=num
-            
-        articulo["estado"]="vigente"
+    datos_globales = obtenerDatosGlobales(boe_file)
     
-    return articulos, disposiciones, texto_extra, datos_globales, materias
+    return articulos, disposiciones, texto_extra, datos_globales

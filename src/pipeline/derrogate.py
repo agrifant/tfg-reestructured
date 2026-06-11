@@ -1,5 +1,6 @@
 import re
 import json
+import src.pipeline.utils as utils
 import src.llm.callToLLM as llm
 
 def es_disposicion_derrogatoria(texto: str) -> bool:
@@ -80,11 +81,6 @@ def identificar_derrogaciones(text:str)->list[json]:
                 print("salida forzada")
                 return []
 
-def extraer_ley(texto: str):
-    patron = r"\b\d+/\d{4}\b"
-    match = re.search(patron, texto)
-    return match.group(0) if match else None
-
 def extraer_numeros_leyes_modificadas(texto: dict):
     """
     Extrae todos los números de 'que_afecta' en una lista.
@@ -100,7 +96,7 @@ def extraer_numeros_leyes_modificadas(texto: dict):
 def limpiarSalidaLLM(data):
     out=[]
     for i in data:
-        ley=extraer_ley(i["target_norma"])
+        ley=utils.extraer_ley(i["target_norma"])
 
         if ley is not None:
             if i["que_afecta"]=="todo":
@@ -138,4 +134,7 @@ def main_derrogate(disposiciones):
                     {"num_articulo": norma["target"]}
                 ])
 
-    return to_delete
+    #Cambiamos de la metadata el estado a derrogado
+    if to_delete != []:
+        for i in to_delete:
+            BD.changeMetadata(i, "estado", "derrogado")

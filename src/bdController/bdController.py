@@ -15,54 +15,43 @@ class bdController():
         self.bd_chroma= chroma.chroma()
         self.boe_ids=self.get_boe_documents_inserted()
     
-    def addDocument(self,
-        datos_globales: dict, 
-        articulos: list[dict],
-        disposiciones: list[dict], 
-        texto_extra: list[dict])-> bool:
-
-        #Nos quedamos con los metadatos que nos interesan
-        campos_global=["id_boe","url_pdf","tipo_norma","fecha_disposicion","titulo", "departamento", "origen_legislativo", "fecha_publicacion", "numero_norma"]
-        metadata_global=utils.filtrar_incluir(datos_globales,campos_global)
-
+    def addDocument(self, articulos: dict, disposiciones:dict, textos_extras:dict, id_boe:str)-> bool:
         #Comprobamos si ya existe el documento
-        if self.existDocument(metadata_global["id_boe"]): return False
+        if self.existDocument(id_boe): return False
 
-        ids=[]
-        content=[]
-        metadata=[]
 
         campos_ocultar=["id", "cuerpo"]
 
+        #Guardamos en estos vectores todos los datos que vamos a meter en la bd
+        ids=[]
+        content=[]
+        metadata=[]
         for articulo in articulos:
             #Tratamos la metadata
-            metadata_articulo = utils.filtrar_excluir(articulo, campos_ocultar)
-            combined_metadata = {**metadata_global, **metadata_articulo}
+            metadata_add = utils.filtrar_excluir(articulo, campos_ocultar)
         
             ids.append(articulo["id"])
             content.append(articulo["cuerpo"])
-            metadata.append(combined_metadata)
+            metadata.append(metadata_add)
 
-        for disp in disposiciones:
+        for disposicion in disposiciones:
             #Tratamos la metadata
-            metadata_articulo = utils.filtrar_excluir(disp, campos_ocultar)
-            combined_metadata = {**metadata_global, **metadata_articulo}
-            
-            ids.append(disp["id"])
-            content.append(disp["cuerpo"])
-            metadata.append(combined_metadata)
+            metadata_add = utils.filtrar_excluir(disposicion, campos_ocultar)
+        
+            ids.append(disposicion["id"])
+            content.append(disposicion["cuerpo"])
+            metadata.append(metadata_add)
 
-        for text in texto_extra:
+        for texto in textos_extras:
             #Tratamos la metadata
-            metadata_articulo = utils.filtrar_excluir(text, campos_ocultar)
-            combined_metadata = {**metadata_global, **metadata_articulo}
-
-            ids.append(text["id"])
-            content.append(text["cuerpo"])
-            metadata.append(combined_metadata)
+            metadata_add = utils.filtrar_excluir(texto, campos_ocultar)
+        
+            ids.append(texto["id"])
+            content.append(texto["cuerpo"])
+            metadata.append(metadata_add)
 
         if self.bd_chroma.createNodes(ids,content, metadata):
-            self.boe_ids.add(metadata_global["id_boe"])
+            self.boe_ids.add(id_boe)
             self.save_boe_documents_inserted()
             return True
         return False
@@ -143,6 +132,38 @@ class bdController():
 
         data = self.bd_chroma.getDataNode(final_ids) if final_ids else []
         return "\n\n".join(data)
+
+    def get_article(self, ley, article):
+        where = [
+            {"numero_norma": ley},
+            {"num_articulo": article}
+        ]
+    
+        result = self.bd_chroma.get_node_metadata(where)
+    
+        if not result or not result.get("metadatas", []):
+            return None, None
+    
+        article_parts = []
+    
+        for metadata in result["metadatas"]:
+            article_parts.append(
+                (
+                    int(metadata.get("parte", 0)),
+                    metadata.get("cuerpo_integro", "")
+                )
+            )
+    
+        # ordenar por parte
+        article_parts.sort(key=lambda x: x[0])
+    
+        # reconstruir texto completo
+        article_complete = "\n".join(texto for _, texto in article_parts)
+    
+        # devolver también metadata del primer elemento (si existe)
+        first_metadata = result["metadatas"][0]
+    
+        return article_complete, first_metadata
 
     def existDocument(self, id_boe: str) -> bool:
         return id_boe in self.boe_ids

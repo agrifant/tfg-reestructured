@@ -9,107 +9,57 @@ import json
 import os
 # python3 -m src.pipeline.pipeline
 
-def pipeline(documento: str, BD, delete_derrogations, unificated_versions)-> tuple:
-    """
-        Procesa un documento BOE y genera chunks de los textos relevantes para análisis o almacenamiento.
-
-        Pasos del pipeline:
-            1. Obtener el archivo XML del BOE mediante `fetcher.obtenerXML`.
-            2. Extraer las diferentes partes del BOE de interés:
-                - Artículos
-                - Disposiciones
-                - Texto extra
-            y también los datos globales y materias mediante `parser`.
-            3. Liberar memoria cerrando el archivo XML.
-            4. Realizar chunking de los textos relevantes usando
-            `chunking.chunkear_diccionario`:
-                - Cada artículo
-                - Cada disposición
-                - Cada texto extra
-            5. Devolver los datos procesados y los chunks generados.
-
-        Args:
-            documento (str): Identificador o ruta del BOE a procesar.
-
-        Returns:
-            tuple: Contiene los siguientes elementos:
-                - datos_globales (dict): Información general del BOE extraída del XML.
-                - materias (list[str]): Lista de materias asociadas al BOE.
-                - articulos_chunked (list[tuple]): Lista de tuplas (articulo, chunks) donde
-                `chunks` es la lista de diccionarios resultante del chunking del artículo.
-                - disposiciones_chunked (list[tuple]): Lista de tuplas (disposición, chunks) similares a los artículos.
-                - texto_extra_chunked (list[tuple]): Lista de tuplas (texto extra, chunks).
-
-        Notes:
-            - Se asume que cada `articulo`, `disposicion` o `texto_extra` contiene un campo `"cuerpo"` que se puede chunkear.
-            - La función libera memoria cerrando el XML antes de realizar el chunking.
-            - Los chunks devueltos cumplen los límites de tokens establecidos en `chunkear_diccionario`.
-    """
-    #Función que obtiene el boe que queremos
+def pipeline(documento: str, BD, delete_derrogations:bool, unificated_versions:bool)-> tuple:
+    #Obtenemos el fichero del BOE en formato XML
     boe_file = fetcher.obtenerXML(documento)
+    if boe_file is None:
+        return False
 
-    #Obtenemos las diferentes partes del boe que nos interesan
-    articulos, disposiciones, texto_extra, datos_globales, materias= parser.getDatos(boe_file, documento)
+    
+    #Obtenemos los diferentes datos que vamos a extraer del fichero del BOE
+    articulos, disposiciones, texto_extra, datos_globales= parser.getDatos(boe_file, documento)
 
-    # Liberar memoria del XML
+
+    
+    # Liberamos de la memoria el documento XML
     boe_file.close()
     del boe_file
 
+    
+
+    #Comprobamos si se tratan de artículos o disposiciones que modifican a otras y dejamos el artículo con la versión correspondiente
     if unificated_versions:
-        print("unificando")
-        un.main_unificate(articulos)
-        un.main_unificate(disposiciones)
+        articulos = un.main_unificate(BD, articulos)
+        disposiciones = un.main_unificate(BD, disposiciones)
+
+        
+    #Añadimos el metadata necesaria
+    utils.addMetadata(articulos, disposiciones, texto_extra, datos_globales)
+
+
+
 
     #Hacemos chunking sobre los datos que nos interesan
-    articulos_chunked=[]
-    disposiciones_chunked=[]
-    texto_extra_chunked=[]
+    articulos_chunked = chunking.make_chunking(articulos)
+    disposiciones_chunked = chunking.make_chunking(disposiciones)
+    texto_extra_chunked = chunking.make_chunking(texto_extra)
 
-    for articulo in articulos:
-        articulos_chunked.extend(chunking.chunkear_diccionario(articulo, "cuerpo"))
-
-    for disposicion in disposiciones:
-        disposiciones_chunked.extend(chunking.chunkear_diccionario(disposicion, "cuerpo"))
-
-    for extra in texto_extra:
-        texto_extra_chunked.extend(chunking.chunkear_diccionario(extra, "cuerpo"))
 
     #Añanidmos el texto
-    for articulo in articulos_chunked:
-        articulo["cuerpo"] = utils.enriquecerTextos(
-            articulo,
-            datos_globales,
-            materias
-        )
-
-    for disp in disposiciones_chunked:
-        disp["cuerpo"] = utils.enriquecerTextos(
-            disp,
-            datos_globales,
-            materias
-        )
-
-    for text in texto_extra_chunked:
-        text["cuerpo"] = utils.enriquecerTextos(
-            text,
-            datos_globales,
-            materias
-        )
+    articulos_chunked=utils.makeEnriquecerTextos(articulos_chunked, datos_globales)
+    disposiciones_chunked=utils.makeEnriquecerTextos(disposiciones_chunked, datos_globales)
+    texto_extra_chunked=utils.makeEnriquecerTextos(texto_extra_chunked, datos_globales)
     
     
+
+    #Comprobamos si hay que eliminar algo que sea derrogado
+    if delete_derrogations:
+        der.main_derrogate(BD, disposiciones)
+
     
     #Irelevante
     #"""
-    os.makedirs("data", exist_ok=True)
-    
-    with open(f"data/articulos{documento}.json", "w", encoding="utf-8") as f:
-        json.dump(articulos, f, ensure_ascii=False, indent=2)
-        os.makedirs("data", exist_ok=True)
-    
-    with open(f"data/disposiciones{documento}.json", "w", encoding="utf-8") as f:
-        json.dump(disposiciones, f, ensure_ascii=False, indent=2)
-    
-    
+    os.makedirs("data", exist_ok=True)    
 
     with open(f"data/articulos_chunked{documento}.json", "w", encoding="utf-8") as f:
         json.dump(articulos_chunked, f, ensure_ascii=False, indent=2)
@@ -125,18 +75,8 @@ def pipeline(documento: str, BD, delete_derrogations, unificated_versions)-> tup
         json.dump(datos_globales, f, ensure_ascii=False, indent=2)
     #"""
 
-    if delete_derrogations:
-        #Obtenemos el metadata de todos los chunks que hay que derrogar
-        derrogate=der.main_derrogate(disposiciones)
-
-        #Cambiamos de la metadata el estado a derrogado
-        if derrogate != []:
-                for i in derrogate:
-                    BD.changeMetadata(i, "estado", "derrogado")
-
-    out=BD.addDocument(datos_globales, articulos_chunked, disposiciones_chunked, texto_extra_chunked)
-    
-    return out
+    #Añadimos los chunks a la BD
+    return BD.addDocument(articulos_chunked, disposiciones_chunked, texto_extra_chunked, documento)
 
 def generarContextoPreguntas(documento:str)->list:
     #Función que obtiene el boe que queremos

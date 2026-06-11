@@ -142,7 +142,7 @@ def split_keep_delimiter(texto: str, delimitador: tuple)-> list[str]:
         pattern = r'(?=' + delimitador[0] + r')'
     return re.split(pattern, texto)
 
-def chunkear_diccionario(diccionario: dict, label:str , MAX_TOKENS: int =250, MIN_TOKENS: int =100, OVERLAP: int =0.2)-> list[dict]:
+def chunkear_diccionario(diccionario: dict, label:str , cont,  MAX_TOKENS: int =250, MIN_TOKENS: int =100, OVERLAP: int =0.2)-> list[dict]:
     """
         Divide el texto de un artículo en chunks respetando límites de tokens
         y devuelve una lista de diccionarios con los chunks generados.
@@ -180,22 +180,24 @@ def chunkear_diccionario(diccionario: dict, label:str , MAX_TOKENS: int =250, MI
 
     
     chunking(diccionario[label], out, MAX_TOKENS, MIN_TOKENS, OVERLAP)
-    
     for i in range(len(out)):
         aux= diccionario.copy()
-        aux["id"]=f"{diccionario['id']}.{i+1}"
+        aux["id"]=f"{diccionario['id']}.{cont}.{i+1}"
         aux["cuerpo"]= out[i]
-        aux["parte"]=f"Parte {i+1} de {len(out)}"
+        aux["cuerpo_integro"]= out[i]
+        aux["parte"]=f"{i+1}"
             
         diccionario_chunked.append(aux)
     
     return diccionario_chunked
 
-def añadirTextoCuerpo(diccionario, datos_globales):
-    titulo=datos_globales["titulo"]
-    for dict in diccionario:
-        cuerpo=dict["cuerpo"]
-        titulo_articulo=dict.get("titulo_articulo","texto_extra")
-        dict["cuerpo"]= titulo+"\n"+titulo_articulo+"\n"+cuerpo
-    return diccionario
+def make_chunking(diccionario):
+    aux=[]
+
+    cont=1
+    for dic in diccionario:
+        aux.extend(chunkear_diccionario(dic, "cuerpo", cont))
+        cont+=1
+
+    return aux
 

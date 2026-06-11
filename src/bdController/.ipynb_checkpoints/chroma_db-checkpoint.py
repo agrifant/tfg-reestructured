@@ -194,7 +194,7 @@ class chroma():
             iter=[]
             ley = metadatas[i].get("id_boe", "")
             url = metadatas[i].get("url_pdf", "")
-            titulo = metadatas[i].get('titulo_articulo',"Preambulo")
+            titulo = metadatas[i].get('titulo',"Preambulo")
 
             iter.append(f"{ley}: {titulo}. {url}\n")
             iter.append(documents[i])
@@ -202,3 +202,14 @@ class chroma():
             out.append(doc)
 
         return out
+
+    def get_node_metadata(self, base_conditions):
+        where = {"$and": base_conditions}
+        collection = self.get_collection()
+    
+        result = collection.get(
+            where=where,
+            include=["metadatas"]
+        )
+    
+        return result
