@@ -109,12 +109,12 @@ def limpiarSalidaLLM(data):
 
     return out
 
-def main_derrogate(disposiciones):
+def main_derrogate(BD, disposiciones):
     to_delete=[]
     derrogaciones=[]
     #Identificamos la disposición de las derrogaciones
     for disposicion in disposiciones:
-        if es_disposicion_derrogatoria(disposicion["titulo_articulo"]):
+        if es_disposicion_derrogatoria(disposicion["titulo"]):
             derrogaciones.append(disposicion)
 
     for i in derrogaciones:
