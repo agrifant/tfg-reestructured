@@ -120,9 +120,9 @@ class bdController():
 
                 for i, s in zip(ids_filtered, scores_filtered):
                     if i in score_map:
-                        score_map[i] += 0.2  
+                        score_map[i] *= 1.5  
                     else:
-                        score_map[i] = s + 0.2
+                        score_map[i] = s * 1.5
             
         final_ids = sorted(
             (k for k, v in score_map.items() if v >= threshold),

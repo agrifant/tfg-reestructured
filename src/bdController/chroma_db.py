@@ -139,7 +139,8 @@ class chroma():
             ids = results["ids"][0]
             distances = results["distances"][0]
 
-            return ids, distances
+            similarities = [1 / (1 + d) for d in distances]
+            return ids, similarities
 
         except Exception as e:
             print(f"Error en la consulta: {e}")
@@ -170,7 +171,8 @@ class chroma():
             ids = results["ids"][0]
             distances = results["distances"][0]
 
-            return ids, distances
+            similarities = [1 / (1 + d) for d in distances]
+            return ids, similarities
 
         except Exception as e:
             print(f"Error en la consulta: {e}")
@@ -186,18 +188,19 @@ class chroma():
         results = collection.get(ids=ids)
 
         metadatas = results.get("metadatas", [])
-        documents = results.get("documents", [])
 
         out = []
 
-        for i in range(len(documents)):
+        for i in range(len(metadatas)):
             iter=[]
-            ley = metadatas[i].get("id_boe", "")
+            ley = metadatas[i].get("numero_norma", "")
             url = metadatas[i].get("url_pdf", "")
+            titulo_norma = metadatas[i].get('titulo_norma')
             titulo = metadatas[i].get('titulo',"Preambulo")
+            cuerpo = metadatas[i].get('cuerpo_integro')
 
-            iter.append(f"{ley}: {titulo}. {url}\n")
-            iter.append(documents[i])
+            iter.append(f"{ley} {titulo_norma} {titulo}\n{url}\n")
+            iter.append(cuerpo)
             doc="".join(iter)
             out.append(doc)
 

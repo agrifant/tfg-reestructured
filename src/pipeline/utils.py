@@ -155,15 +155,16 @@ def separarTitulo(texto):
     return titulo, argumento
 
 def enriquecerTextos(data: dict, datos_globales):
-    titulo_ley = datos_globales.get("titulo", "")
+    titulo_ley = datos_globales.get("titulo_norma", "")
 
     titulo_ley = descriptor_simple(titulo_ley)
-    articulo = data.get("titulo_articulo", "")
+    articulo = data.get("titulo", "")
     texto = data.get("cuerpo", "")
 
     
     partes = [
-        f"{titulo_ley}" if titulo_ley else "",
+        f"{titulo_ley} \n" if titulo_ley else "",
+        articulo,
         texto
     ]
 

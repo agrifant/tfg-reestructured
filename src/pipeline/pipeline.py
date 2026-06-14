@@ -25,18 +25,17 @@ def pipeline(documento: str, BD, delete_derrogations:bool, unificated_versions:b
     boe_file.close()
     del boe_file
 
-    
 
+
+    #Añadimos el metadata necesaria
+    utils.addMetadata(articulos, disposiciones, texto_extra, datos_globales)
+
+
+    
     #Comprobamos si se tratan de artículos o disposiciones que modifican a otras y dejamos el artículo con la versión correspondiente
     if unificated_versions:
         articulos = un.main_unificate(BD, articulos)
         disposiciones = un.main_unificate(BD, disposiciones)
-
-    
-        
-    #Añadimos el metadata necesaria
-    utils.addMetadata(articulos, disposiciones, texto_extra, datos_globales)
-
 
 
 
@@ -59,7 +58,7 @@ def pipeline(documento: str, BD, delete_derrogations:bool, unificated_versions:b
 
     
     #Irelevante
-    """
+    
     os.makedirs("data", exist_ok=True)    
 
     with open(f"data/articulos_chunked{documento}.json", "w", encoding="utf-8") as f:
@@ -74,7 +73,7 @@ def pipeline(documento: str, BD, delete_derrogations:bool, unificated_versions:b
     
     with open(f"data/datos_globales{documento}.json", "w", encoding="utf-8") as f:
         json.dump(datos_globales, f, ensure_ascii=False, indent=2)
-    """
+    
 
     #Añadimos los chunks a la BD
     return BD.addDocument(articulos_chunked, disposiciones_chunked, texto_extra_chunked, documento)

@@ -41,6 +41,10 @@ t.make_test(maquina4, "Threshold=0.9", prueba2, 1, 1)
 import src.tests.ragas.ragasTests as test
 import src.rag.rag as rag
 
-maquina=rag.rag(False, False, 0.7)
+maquina=rag.rag(False, False, 0.0)
 
-test.ejecutarTest(maquina, "prueba")
+maquina.purgarBasesDatos()
+
+maquina.newBoeDocument("BOE-A-2015-3439")
+
+test.ejecutarTest(maquina, "prueba_buena")

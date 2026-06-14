@@ -137,6 +137,7 @@ def main_unificate(BD, articulos):
                 aux["cuerpo"]=texto_modificacion
                 aux["titulo"]=articulo["titulo"]
                 aux["id"]=articulo["id"]
+                aux["estado"]="vigente"
                 all_articulos.append(aux)
                 continue
 
@@ -149,6 +150,7 @@ def main_unificate(BD, articulos):
                 aux["cuerpo"]=texto_modificacion
                 aux["titulo"]=articulo["titulo"]
                 aux["id"]=articulo["id"]
+                aux["estado"]="vigente"
                 all_articulos.append(aux)
                 continue
 
@@ -162,11 +164,16 @@ def main_unificate(BD, articulos):
             #Como se trata de una disposición o artículo, dejamos el diccionario con los datos mínimos
             articulo_unificado={}
             articulo_unificado["cuerpo"]=articulo_final
-            articulo_unificado["titulo"]=metadata["titulo"]
             articulo_unificado["id"]=articulo["id"]
+            
+            articulo_unificado["titulo"]=metadata["titulo"]
+            articulo_unificado["titulo_norma"]=metadata["titulo_norma"]
+            articulo_unificado["numero_norma"]=metadata["numero_norma"]
+            articulo_unificado["tipo_norma"]=metadata["tipo_norma"]
+            articulo_unificado["num_articulo"]=metadata["num_articulo"]
+            articulo_unificado["estado"]="vigente"
             all_articulos.append(articulo_unificado)
             
-
             
             #Ponemos el artículo anterior como modificado
             BD.changeMetadata([{"numero_norma":ley},{"num_articulo":num_art}], "estado", "modificado")

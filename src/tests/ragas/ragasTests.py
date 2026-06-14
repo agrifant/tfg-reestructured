@@ -13,7 +13,9 @@ import numpy as np
 
 from ragas.metrics import (
     faithfulness,
-    answer_relevancy
+    answer_relevancy,
+    context_recall,
+    context_precision
 )
 
 output_file= "data/ragas_dataset.jsonl"
@@ -115,7 +117,7 @@ def ReponderPreguntas(maquina, output_file=output_file):
             data["contexts"]=texts
             data["answer"]=answer
             all_questions_responded.append(data)
-    
+
     return Dataset.from_list(all_questions_responded)
 
 def guararResultados(results, name, filename="data/ragas_results.csv"):
@@ -183,7 +185,11 @@ def ejecutarTest(maquina, name):
 
     result = evaluate(
         data,
-        metrics=[faithfulness],
+        metrics=[
+            faithfulness,
+            answer_relevancy,
+            context_recall,
+            context_precision],
         llm=llm,
         embeddings=embeddings
     )
