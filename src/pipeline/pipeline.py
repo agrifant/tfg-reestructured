@@ -84,35 +84,25 @@ def generarContextoPreguntas(documento:str)->list:
     boe_file = fetcher.obtenerXML(documento)
 
     #Obtenemos las diferentes partes del boe que nos interesan
-    articulos, disposiciones, _, data_global, _= parser.getDatos(boe_file, documento)
+    articulos, disposiciones, _, datos_globales = parser.getDatos(boe_file, documento)
 
     # Liberar memoria del XML
     boe_file.close()
     del boe_file
 
+    #Añadimos el metadata necesaria
+    utils.addMetadata(articulos, disposiciones, _, datos_globales)
+
     #Hacemos chunking sobre los datos que nos interesan
-    articulos_chunked=[]
-    disposiciones_chunked=[]
-    texto_extra_chunked=[]
+    articulos_chunked=chunking.make_chunking(articulos)
+    disposiciones_chunked=chunking.make_chunking(disposiciones)
 
-    for articulo in articulos:
-        articulos_chunked.extend(chunking.chunkear_diccionario(articulo, "cuerpo"))
-
-    for disposicion in disposiciones:
-        disposiciones_chunked.extend(chunking.chunkear_diccionario(disposicion, "cuerpo"))
-
+    #Añadimos metadata necesaria
     documentos=[]
     for articulo in articulos_chunked:
-        documentos.append(data_global["titulo"]+articulo["titulo_articulo"]+articulo["cuerpo"])
+        documentos.append(datos_globales["titulo_norma"]+articulo["titulo"]+articulo["cuerpo"])
 
     for disp in disposiciones_chunked:
-        documentos.append(data_global["titulo"]+disp["titulo_articulo"]+disp["cuerpo"])
-
-    """for text in texto_extra_chunked:
-        documentos.append(text["cuerpo"])"""
-
-    with open(f"data/datosPreguntas{documento}.json", "w", encoding="utf-8") as f:
-        json.dump(documentos, f, ensure_ascii=False, indent=2)
+        documentos.append(datos_globales["titulo_norma"]+disp["titulo"]+disp["cuerpo"])
 
     return documentos
-#pipeline("BOE-A-2015-3439")

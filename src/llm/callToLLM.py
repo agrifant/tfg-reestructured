@@ -112,8 +112,9 @@ def pront_ask_rag(contexto_completo, query, history_text):
     ]
 
 
-def make_rag_question(query: str, contexto_completo):
+def make_rag_question(query: str, chunks):
     global history_text
+    contexto_completo="\n\n".join(chunks)
     #Escribirmos el promt
     prompt=pront_ask_rag(contexto_completo, query, history_text)
 

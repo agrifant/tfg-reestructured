@@ -1,5 +1,7 @@
+"""
 import src.tests.ragas.test as t
 import src.rag.rag as rag
+
 
 prueba1=['BOE-A-1995-25444', 'BOE-A-2003-21538', 'BOE-A-2010-9953', 'BOE-A-2015-3439']
 prueba2 = [
@@ -34,3 +36,11 @@ t.make_test(maquina2, "Threshold=0.6", prueba2, 1, 1)
 t.make_test(maquina3, "Threshold=0.7", prueba2, 1, 1)
 t.make_test(maquina4, "Threshold=0.8", prueba2, 1, 1)
 t.make_test(maquina4, "Threshold=0.9", prueba2, 1, 1)
+"""
+
+import src.tests.ragas.ragasTests as test
+import src.rag.rag as rag
+
+maquina=rag.rag(False, False, 0.7)
+
+test.ejecutarTest(maquina, "prueba")

@@ -131,7 +131,7 @@ class bdController():
         )[:n]
 
         data = self.bd_chroma.getDataNode(final_ids) if final_ids else []
-        return "\n\n".join(data)
+        return data
 
     def get_article(self, ley, article):
         where = [
