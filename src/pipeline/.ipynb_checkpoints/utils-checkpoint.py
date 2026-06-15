@@ -158,13 +158,11 @@ def enriquecerTextos(data: dict, datos_globales):
     titulo_ley = datos_globales.get("titulo_norma", "")
 
     titulo_ley = descriptor_simple(titulo_ley)
-    articulo = data.get("titulo", "")
     texto = data.get("cuerpo", "")
 
     
     partes = [
         f"{titulo_ley} \n" if titulo_ley else "",
-        articulo,
         texto
     ]
 

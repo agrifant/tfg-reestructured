@@ -10,6 +10,7 @@ import json
 import os
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 
 from ragas.metrics import (
     faithfulness,
@@ -83,10 +84,12 @@ def make_question(texts:str)->list[json]:
                 return []
     
 
-def generarPreguntas(question_num, id_boe="BOE-A-2015-3439", output_file=output_file):
+def generarPreguntas(question_num, output_file=output_file, id_boe="BOE-A-2015-3439"):
     # Obtenemos el documento del que queremos hacer las preguntas
     documento = pipe.generarContextoPreguntas(id_boe)
-
+    
+    os.makedirs("data", exist_ok=True)
+    
     with open(output_file, "w", encoding="utf-8") as f:
         for i in range(question_num):
 
@@ -120,18 +123,19 @@ def ReponderPreguntas(maquina, output_file=output_file):
 
     return Dataset.from_list(all_questions_responded)
 
-def guararResultados(results, name, filename="data/ragas_results.csv"):
+def guararResultados(results, name, filename):
+    filename_csv = os.path.join(filename, "resultados.csv")
 
-    #Convertir a DataFrame
+    os.makedirs(filename, exist_ok=True)
+
+    # Convertir a DataFrame
     if hasattr(results, "to_pandas"):
         df = results.to_pandas()
     else:
         df = pd.DataFrame(results)
 
     # Construir resumen estadístico
-    row = {
-        "name": name
-    }
+    row = {"name": name}
 
     ignore_cols = {"question", "answer", "contexts", "ground_truth"}
 
@@ -148,14 +152,13 @@ def guararResultados(results, name, filename="data/ragas_results.csv"):
         except Exception:
             pass
 
-
-    # 3. Añadimos a CSV 
-    file_exists = os.path.isfile(filename)
-
     out_df = pd.DataFrame([row])
 
+    # ✔ AQUÍ está la corrección importante
+    file_exists = os.path.isfile(filename_csv)
+
     out_df.to_csv(
-        filename,
+        filename_csv,
         mode="a",
         header=not file_exists,
         index=False,
@@ -163,35 +166,66 @@ def guararResultados(results, name, filename="data/ragas_results.csv"):
     )
 
     print(f"Guardado en CSV: {row}")
+
+def make_grafica(file, title, name_col_x):
+    file_input = os.path.join(file, "resultados.csv")
     
-def ejecutarTest(maquina, name):
+    df = pd.read_csv(file_input)
+
+    x_col = "name"
+    columnas = ["faithfulness_mean", "answer_relevancy_mean", "context_recall_mean", "context_precision_mean"]
+
+    for col in columnas:
+        if x_col not in df.columns:
+            print(f"Columna '{x_col}' no encontrada")
+            return
+
+        if col not in df.columns:
+            print(f"Columna '{col}' no encontrada")
+            continue
+
+        plt.figure(figsize=(10, 6))
+        plt.plot(df[x_col], df[col], marker="o")
+
+        plt.xlabel(name_col_x)
+        plt.ylabel(col)
+        plt.title(title)
+
+        #plt.ylim(0, 1)
+        
+        # Rotar etiquetas si son nombres largos
+        plt.xticks(rotation=45)
+
+        plt.savefig(
+            f"{file}/{col}.png",
+            dpi=300,
+            bbox_inches="tight"
+        )
+
+        plt.close()
+    
+def ejecutarTest(maquina, name, filename):
     #Respondemos las preguntas:
     data= ReponderPreguntas(maquina)
 
     #Hacemos el test con ragas
-    """result = evaluate(
-        dataset,
-        metrics=[
-            faithfulness,
-            answer_relevancy
-        ],
-    )"""
     
     llm = Ollama(model="llama3.1:8b")
 
     embeddings = HuggingFaceEmbeddings(
         model_name="all-MiniLM-L6-v2"
     )
-
+    """
+                answer_relevancy,
+            context_recall,
+            context_precision
+    """
     result = evaluate(
         data,
         metrics=[
-            faithfulness,
-            answer_relevancy,
-            context_recall,
-            context_precision],
+            faithfulness],
         llm=llm,
         embeddings=embeddings
     )
 
-    guararResultados(result, name)
+    guararResultados(result, name, filename)

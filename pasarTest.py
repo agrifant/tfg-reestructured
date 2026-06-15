@@ -43,8 +43,13 @@ import src.rag.rag as rag
 
 maquina=rag.rag(False, False, 0.0)
 
+#Preparamos la BD
 maquina.purgarBasesDatos()
-
 maquina.newBoeDocument("BOE-A-2015-3439")
 
-test.ejecutarTest(maquina, "prueba_buena")
+test.ejecutarTest(maquina, "threshold=0", "data/prueba")
+
+maquina.changeMinThreshold(0.8)
+test.ejecutarTest(maquina, "threshold=1", "data/prueba")
+
+test.make_grafica("data/prueba", "prueba grafica", "thresholds")

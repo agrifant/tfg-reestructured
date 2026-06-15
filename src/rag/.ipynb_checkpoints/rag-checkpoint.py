@@ -44,4 +44,7 @@ class rag():
 
     def change_min_theshold(self, theshold):
         self.min_theshold=theshold
+
+    def changeMinThreshold(self, threshold):
+        self.min_theshold=threshold
         

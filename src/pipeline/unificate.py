@@ -51,7 +51,8 @@ def esModificativo(texto):
     patrones = [
         "modifica",
         "modificación",
-        "se modifica"
+        "se modifica",
+        "se añade"
     ]
 
     return any(p in texto for p in patrones)
@@ -72,6 +73,7 @@ def extraerIntro(texto):
         lineas.append(linea)
 
     return " ".join(lineas).strip()
+
 def extraerSubarticulos(texto):
     PATRON = re.compile(r"^(uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|\d+)\.\s")
     
@@ -98,7 +100,7 @@ def extraerSubarticulos(texto):
 
     return subarticulos
     
-def main_unificate(BD, articulos):
+def main_unificate(BD, articulos, datos_globales):
     all_articulos=[]
     
     for articulo in articulos:
@@ -133,12 +135,14 @@ def main_unificate(BD, articulos):
             #Extraemos el número del artículo al que modifica
             num_art=ext.extract_articulo(texto_modificacion)
             if num_art is None:
-                aux={}
-                aux["cuerpo"]=texto_modificacion
-                aux["titulo"]=articulo["titulo"]
-                aux["id"]=articulo["id"]
-                aux["estado"]="vigente"
-                all_articulos.append(aux)
+                aux=[{
+                    "cuerpo":texto_modificacion,
+                    "titulo": articulo["titulo"],
+                    "id":articulo["id"]
+                }]
+                
+                utils.addMetadata(aux, [], [], datos_globales)
+                all_articulos.append(aux[0])
                 continue
 
 
@@ -146,12 +150,14 @@ def main_unificate(BD, articulos):
             #Obtenemos de la BD el artículo al que modifica
             texto_vigente, metadata=BD.get_article(ley, num_art)
             if texto_vigente is None:
-                aux={}
-                aux["cuerpo"]=texto_modificacion
-                aux["titulo"]=articulo["titulo"]
-                aux["id"]=articulo["id"]
-                aux["estado"]="vigente"
-                all_articulos.append(aux)
+                aux=[{
+                    "cuerpo":texto_modificacion,
+                    "titulo": articulo["titulo"],
+                    "id":articulo["id"]
+                }]
+                
+                utils.addMetadata(aux, [], [], datos_globales)
+                all_articulos.append(aux[0])
                 continue
 
 
@@ -162,16 +168,9 @@ def main_unificate(BD, articulos):
 
             
             #Como se trata de una disposición o artículo, dejamos el diccionario con los datos mínimos
-            articulo_unificado={}
+            articulo_unificado=metadata.copy()
             articulo_unificado["cuerpo"]=articulo_final
             articulo_unificado["id"]=articulo["id"]
-            
-            articulo_unificado["titulo"]=metadata["titulo"]
-            articulo_unificado["titulo_norma"]=metadata["titulo_norma"]
-            articulo_unificado["numero_norma"]=metadata["numero_norma"]
-            articulo_unificado["tipo_norma"]=metadata["tipo_norma"]
-            articulo_unificado["num_articulo"]=metadata["num_articulo"]
-            articulo_unificado["estado"]="vigente"
             all_articulos.append(articulo_unificado)
             
             
