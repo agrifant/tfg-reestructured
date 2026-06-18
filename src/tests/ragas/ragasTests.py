@@ -11,6 +11,7 @@ import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from ragas.run_config import RunConfig
 
 from ragas.metrics import (
     faithfulness,
@@ -34,29 +35,35 @@ def make_question(texts:str)->list[json]:
         "required": ["question", "answer"]
     }
     system_prompt = """
-        Eres un experto en generación de datasets de evaluación para sistemas RAG.
-        
-        Tu tarea es crear preguntas y sus respuestas que puedan responderse exclusivamente con la información proporcionada.
-        
-        Reglas:
-        - La pregunta debe ser clara, específica y natural.
-        - No inventes información que no aparezca en el contexto.
-        - Evita preguntas ambiguas o demasiado genéricas.
-        - La respuesta debe encontrarse explícitamente en el contexto.
-        - Genera una única pregunta.
-        - La pregunta debe referirse explícitamente a elementos concretos presentes en el texto (artículos, penas, conceptos mencionados).
-        - No se permiten referencias genéricas como "los hechos descritos en la ley", "el texto anterior" o "la ley mencionada".
-        - Evita cualquier formulación hipotética o condicional que introduzca sujetos no mencionados literalmente en el contexto.
-        - La pregunta debe poder responderse copiando o extrayendo directamente una parte del texto.
-
-        Formato:
-        Devuelve un JSON con este formato EXACTO:
-        
-        {{
-          "question": "...",
-          "answer": "..."
-        }}
-        """
+    Eres un experto en generación de datasets de evaluación para sistemas RAG jurídicos.
+    
+    Tu tarea es crear una pregunta y su respuesta basadas únicamente en el contexto proporcionado.
+    
+    Reglas:
+    - Genera una única pregunta.
+    - La pregunta debe sonar como una consulta real que haría una persona.
+    - La pregunta debe ser clara, específica y breve.
+    - La respuesta debe encontrarse explícitamente en el contexto.
+    - No inventes información.
+    - Evita copiar literalmente frases completas del texto.
+    - Evita referencias como:
+      - "artículo anterior"
+      - "inciso precedente"
+      - "texto anterior"
+      - "norma anterior"
+      - "conducta descrita anteriormente"
+    - La pregunta debe ser autocontenida y entendible por sí sola.
+    - No generes casos hipotéticos.
+    - La pregunta debe identificar explícitamente la norma, ley, reglamento o documento cuando dicha información esté disponible en el contexto.
+    - Evita preguntas que puedan tener múltiples respuestas válidas en distintos documentos.
+    - No utilices únicamente referencias estructurales como "artículo 5", "disposición final quinta" o "anexo II" sin mencionar el documento al que pertenecen.
+    
+    Formato:
+    {
+      "question": "...",
+      "answer": "..."
+    }
+    """
     
 
     user_prompt = f"""
@@ -114,47 +121,26 @@ def generarPreguntas(question_num, output_file=output_file, id_boe="BOE-A-2015-3
 def ReponderPreguntas(maquina, output_file=output_file):
     all_questions_responded=[]
     with open(output_file, "r", encoding="utf-8") as f:
+        i=0
         for line in f:
+            i+=1
             data=json.loads(line)
             answer, texts= maquina.preguntar(data["question"], True)
             data["contexts"]=texts
             data["answer"]=answer
             all_questions_responded.append(data)
+            print(f"Respondido pregunta {i}")
 
     return Dataset.from_list(all_questions_responded)
 
-def guararResultados(results, name, filename):
+def guararResultados(row, name, filename):
     filename_csv = os.path.join(filename, "resultados.csv")
-
     os.makedirs(filename, exist_ok=True)
 
-    # Convertir a DataFrame
-    if hasattr(results, "to_pandas"):
-        df = results.to_pandas()
-    else:
-        df = pd.DataFrame(results)
+    row["name"] = name
 
-    # Construir resumen estadístico
-    row = {"name": name}
+    out_df = pd.DataFrame([row])  # ✔ UNA SOLA FILA
 
-    ignore_cols = {"question", "answer", "contexts", "ground_truth"}
-
-    for col in df.columns:
-        if col in ignore_cols:
-            continue
-
-        try:
-            values = df[col].dropna().astype(float)
-
-            row[f"{col}_mean"] = float(np.mean(values))
-            row[f"{col}_var"] = float(np.var(values))
-
-        except Exception:
-            pass
-
-    out_df = pd.DataFrame([row])
-
-    # ✔ AQUÍ está la corrección importante
     file_exists = os.path.isfile(filename_csv)
 
     out_df.to_csv(
@@ -204,9 +190,10 @@ def make_grafica(file, title, name_col_x):
 
         plt.close()
     
-def ejecutarTest(maquina, name, filename):
+def ejecutarTest(maquina, name, filename, filename_test):
     #Respondemos las preguntas:
-    data= ReponderPreguntas(maquina)
+    print("Respondiendo preguntas")
+    data= ReponderPreguntas(maquina, filename_test)
 
     #Hacemos el test con ragas
     
@@ -215,17 +202,37 @@ def ejecutarTest(maquina, name, filename):
     embeddings = HuggingFaceEmbeddings(
         model_name="all-MiniLM-L6-v2"
     )
-    """
-                answer_relevancy,
-            context_recall,
-            context_precision
-    """
-    result = evaluate(
-        data,
-        metrics=[
-            faithfulness],
-        llm=llm,
-        embeddings=embeddings
-    )
 
-    guararResultados(result, name, filename)
+    metrics = [faithfulness, answer_relevancy, context_recall, context_precision]
+
+    rows = {}
+    
+    for metric in metrics:
+        result = evaluate(
+            data,
+            metrics=[metric],
+            llm=llm,
+            embeddings=embeddings,
+            run_config=RunConfig(
+                max_workers=1
+            )
+        )
+    
+        df = result.to_pandas()
+    
+        ignore_cols = {"question", "answer", "contexts", "ground_truth"}
+    
+        for col in df.columns:
+            if col in ignore_cols:
+                continue
+    
+            values = pd.to_numeric(df[col], errors="coerce").dropna()
+    
+            if len(values) == 0:
+                continue
+    
+            # ✔ guardas por métrica
+            rows[f"{metric.name}_mean"] = float(values.mean())
+            rows[f"{metric.name}_var"] = float(values.var())
+
+    guararResultados(rows, name, filename)

@@ -16,9 +16,18 @@ class rag():
         out = pipeline.pipeline(idDocument, self.BD,  self.delete_derrogations, self.unificated_versions)
 
         if out==True:
-            print("Texto añadido con éxito")
+            print(f"OK: {idDocument}")
+            return True
         else:
-            print("No se han podido añadir los textos")
+            print(F"Error: {idDocument}")
+            return False
+    def newListBoesDocuments(self, idsDocuments):
+        salida=True
+        for doc in idsDocuments:
+            aux=self.newBoeDocument(doc)
+            if aux==False:
+                salida=False
+        return salida
 
     def purgarBasesDatos(self)-> None:
         self.BD.purge()

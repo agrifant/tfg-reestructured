@@ -12,5 +12,5 @@ def content_to_embedding(content: list[str]) -> list[list[float]]:
     Returns:
         Lista de embeddings, cada embedding es una lista de floats
     """
-    embeddings = model.encode(content, batch_size=32, show_progress_bar=True)
+    embeddings = model.encode(content, batch_size=32, show_progress_bar=False)
     return embeddings
