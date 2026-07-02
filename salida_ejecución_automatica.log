@@ -1,0 +1,350 @@
+nohup: ignoring input
+Iniciando Chroma...
+Esperando a que Chroma esté listo...
+Ejecutando test...
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+/home/i22enpac/ragCarlos/src/tests/ragas/ragasTests.py:201: LangChainDeprecationWarning: The class `Ollama` was deprecated in LangChain 0.3.1 and will be removed in 1.0.0. An updated version of the class exists in the `langchain-ollama package and should be used instead. To use it run `pip install -U `langchain-ollama` and import as `from `langchain_ollama import OllamaLLM``.
+  llm = Ollama(model="llama3.1:8b")
+/home/i22enpac/ragCarlos/src/tests/ragas/ragasTests.py:203: LangChainDeprecationWarning: The class `HuggingFaceEmbeddings` was deprecated in LangChain 0.2.2 and will be removed in 1.0. An updated version of the class exists in the `langchain-huggingface package and should be used instead. To use it run `pip install -U `langchain-huggingface` and import as `from `langchain_huggingface import HuggingFaceEmbeddings``.
+  embeddings = HuggingFaceEmbeddings(
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+OK: BOE-A-1995-25444
+OK: BOE-A-1996-10993
+OK: BOE-A-1997-4837
+OK: BOE-A-1998-14062
+OK: BOE-A-1998-23133
+OK: BOE-A-1999-9744
+OK: BOE-A-1999-12907
+OK: BOE-A-2000-412
+OK: BOE-A-2000-543
+OK: BOE-A-2000-544
+OK: BOE-A-2000-641
+OK: BOE-A-2000-23659
+OK: BOE-A-2000-23660
+OK: BOE-A-2000-24010
+OK: BOE-A-2002-9848
+OK: BOE-A-2002-24044
+OK: BOE-A-2003-4923
+OK: BOE-A-2003-13022
+OK: BOE-A-2003-18088
+OK: BOE-A-2003-21538
+OK: BOE-A-2003-23645
+OK: BOE-A-2004-21760
+OK: BOE-A-2005-7426
+OK: BOE-A-2005-10621
+OK: BOE-A-2005-16825
+OK: BOE-A-2006-4503
+OK: BOE-A-2006-16776
+OK: BOE-A-2006-20263
+OK: BOE-A-2007-2386
+OK: BOE-A-2007-2388
+OK: BOE-A-2007-4362
+OK: BOE-A-2007-4364
+OK: BOE-A-2007-4365
+OK: BOE-A-2007-6412
+OK: BOE-A-2007-6413
+OK: BOE-A-2007-11311
+OK: BOE-A-2007-13263
+OK: BOE-A-2007-13264
+OK: BOE-A-2007-13266
+OK: BOE-A-2007-13270
+OK: BOE-A-2007-13273
+OK: BOE-A-2007-14326
+OK: BOE-A-2007-16781
+OK: BOE-A-2007-16782
+OK: BOE-A-2007-16784
+OK: BOE-A-2007-16785
+OK: BOE-A-2007-16787
+OK: BOE-A-2007-16788
+OK: BOE-A-2007-16790
+OK: BOE-A-2007-16791
+OK: BOE-A-2007-17574
+OK: BOE-A-2007-18533
+OK: BOE-A-2007-19008
+OK: BOE-A-2007-19879
+OK: BOE-A-2007-20263
+OK: BOE-A-2007-20264
+OK: BOE-A-2007-20636
+OK: BOE-A-2007-22521
+OK: BOE-A-2007-22522
+OK: BOE-A-2007-22523
+OK: BOE-A-2008-1619
+OK: BOE-A-2008-1621
+OK: BOE-A-2008-1623
+OK: BOE-A-2008-2326
+OK: BOE-A-2008-2329
+OK: BOE-A-2008-3513
+OK: BOE-A-2008-3514
+OK: BOE-A-2008-3515
+OK: BOE-A-2008-3518
+OK: BOE-A-2008-3520
+OK: BOE-A-2008-3521
+OK: BOE-A-2008-4893
+OK: BOE-A-2008-4895
+OK: BOE-A-2008-4900
+OK: BOE-A-2008-4902
+OK: BOE-A-2009-4366
+OK: BOE-A-2009-10260
+OK: BOE-A-2009-12514
+OK: BOE-A-2009-12515
+OK: BOE-A-2009-12516
+OK: BOE-A-2009-12517
+OK: BOE-A-2009-12527
+OK: BOE-A-2009-12528
+OK: BOE-A-2009-12529
+OK: BOE-A-2009-12530
+OK: BOE-A-2009-13755
+OK: BOE-A-2009-13756
+OK: BOE-A-2009-13757
+OK: BOE-A-2009-13758
+OK: BOE-A-2009-18822
+OK: BOE-A-2009-18823
+OK: BOE-A-2009-18824
+OK: BOE-A-2010-1
+OK: BOE-A-2010-3514
+OK: BOE-A-2010-9953
+OK: BOE-A-2010-12885
+OK: BOE-A-2010-13113
+OK: BOE-A-2010-16548
+OK: BOE-A-2010-17754
+OK: BOE-A-2010-17756
+OK: BOE-A-2010-17757
+OK: BOE-A-2010-18644
+OK: BOE-A-2010-18645
+OK: BOE-A-2010-18646
+OK: BOE-A-2010-18647
+OK: BOE-A-2010-18648
+OK: BOE-A-2010-18649
+OK: BOE-A-2010-19813
+OK: BOE-A-2010-19814
+OK: BOE-A-2010-19815
+OK: BOE-A-2010-19816
+OK: BOE-A-2010-19817
+OK: BOE-A-2011-1640
+OK: BOE-A-2011-10598
+OK: BOE-A-2012-7511
+OK: BOE-A-2012-8625
+OK: BOE-A-2012-15647
+OK: BOE-A-2014-12651
+OK: BOE-A-2015-460
+OK: BOE-A-2015-462
+OK: BOE-A-2015-463
+OK: BOE-A-2015-1891
+OK: BOE-A-2015-1892
+OK: BOE-A-2015-3439
+Articulos unificados = 0
+Articulos derrogados = 0
+Documentos derrogados = 0
+Respondiendo preguntas
+Respondida pregunta 1/1
+Evaluating:   0%|          | 0/1 [00:00<?, ?it/s]Evaluating: 100%|██████████| 1/1 [00:02<00:00,  2.59s/it]Evaluating: 100%|██████████| 1/1 [00:02<00:00,  2.59s/it]
+Evaluating:   0%|          | 0/1 [00:00<?, ?it/s]Evaluating: 100%|██████████| 1/1 [00:00<00:00,  1.48it/s]Evaluating: 100%|██████████| 1/1 [00:00<00:00,  1.48it/s]
+Evaluating:   0%|          | 0/1 [00:00<?, ?it/s]Evaluating: 100%|██████████| 1/1 [00:00<00:00,  1.69it/s]Evaluating: 100%|██████████| 1/1 [00:00<00:00,  1.69it/s]
+Evaluating:   0%|          | 0/1 [00:00<?, ?it/s]Evaluating: 100%|██████████| 1/1 [00:01<00:00,  1.78s/it]Evaluating: 100%|██████████| 1/1 [00:01<00:00,  1.78s/it]
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+flash_attn is not installed. Using PyTorch native attention implementation.
+OK: BOE-A-1995-25444
+OK: BOE-A-1996-10993
+OK: BOE-A-1997-4837
+OK: BOE-A-1998-14062
+OK: BOE-A-1998-23133
+OK: BOE-A-1999-9744
+OK: BOE-A-1999-12907
+OK: BOE-A-2000-412
+OK: BOE-A-2000-543
+OK: BOE-A-2000-544
+OK: BOE-A-2000-641
+OK: BOE-A-2000-23659
+OK: BOE-A-2000-23660
+OK: BOE-A-2000-24010
+OK: BOE-A-2002-9848
+OK: BOE-A-2002-24044
+OK: BOE-A-2003-4923
+OK: BOE-A-2003-13022
+OK: BOE-A-2003-18088
+OK: BOE-A-2003-21538
+OK: BOE-A-2003-23645
+OK: BOE-A-2004-21760
+OK: BOE-A-2005-7426
+OK: BOE-A-2005-10621
+OK: BOE-A-2005-16825
+OK: BOE-A-2006-4503
+OK: BOE-A-2006-16776
+OK: BOE-A-2006-20263
+OK: BOE-A-2007-2386
+OK: BOE-A-2007-2388
+OK: BOE-A-2007-4362
+OK: BOE-A-2007-4364
+OK: BOE-A-2007-4365
+OK: BOE-A-2007-6412
+OK: BOE-A-2007-6413
+OK: BOE-A-2007-11311
+OK: BOE-A-2007-13263
+OK: BOE-A-2007-13264
+OK: BOE-A-2007-13266
+OK: BOE-A-2007-13270
+OK: BOE-A-2007-13273
+OK: BOE-A-2007-14326
+OK: BOE-A-2007-16781
+OK: BOE-A-2007-16782
+OK: BOE-A-2007-16784
+OK: BOE-A-2007-16785
+OK: BOE-A-2007-16787
+OK: BOE-A-2007-16788
+OK: BOE-A-2007-16790
+OK: BOE-A-2007-16791
+OK: BOE-A-2007-17574
+OK: BOE-A-2007-18533
+OK: BOE-A-2007-19008
+OK: BOE-A-2007-19879
+OK: BOE-A-2007-20263
+OK: BOE-A-2007-20264
+OK: BOE-A-2007-20636
+OK: BOE-A-2007-22521
+OK: BOE-A-2007-22522
+OK: BOE-A-2007-22523
+OK: BOE-A-2008-1619
+OK: BOE-A-2008-1621
+OK: BOE-A-2008-1623
+OK: BOE-A-2008-2326
+OK: BOE-A-2008-2329
+OK: BOE-A-2008-3513
+OK: BOE-A-2008-3514
+OK: BOE-A-2008-3515
+OK: BOE-A-2008-3518
+OK: BOE-A-2008-3520
+OK: BOE-A-2008-3521
+OK: BOE-A-2008-4893
+OK: BOE-A-2008-4895
+OK: BOE-A-2008-4900
+OK: BOE-A-2008-4902
+OK: BOE-A-2009-4366
+OK: BOE-A-2009-10260
+OK: BOE-A-2009-12514
+OK: BOE-A-2009-12515
+OK: BOE-A-2009-12516
+OK: BOE-A-2009-12517
+OK: BOE-A-2009-12527
+OK: BOE-A-2009-12528
+OK: BOE-A-2009-12529
+OK: BOE-A-2009-12530
+OK: BOE-A-2009-13755
+OK: BOE-A-2009-13756
+OK: BOE-A-2009-13757
+OK: BOE-A-2009-13758
+OK: BOE-A-2009-18822
+OK: BOE-A-2009-18823
+OK: BOE-A-2009-18824
+OK: BOE-A-2010-1
+OK: BOE-A-2010-3514
+OK: BOE-A-2010-9953
+OK: BOE-A-2010-12885
+OK: BOE-A-2010-13113
+OK: BOE-A-2010-16548
+OK: BOE-A-2010-17754
+OK: BOE-A-2010-17756
+OK: BOE-A-2010-17757
+OK: BOE-A-2010-18644
+OK: BOE-A-2010-18645
+OK: BOE-A-2010-18646
+OK: BOE-A-2010-18647
+OK: BOE-A-2010-18648
+OK: BOE-A-2010-18649
+OK: BOE-A-2010-19813
+OK: BOE-A-2010-19814
+OK: BOE-A-2010-19815
+OK: BOE-A-2010-19816
+OK: BOE-A-2010-19817
+OK: BOE-A-2011-1640
+OK: BOE-A-2011-10598
+OK: BOE-A-2012-7511
+OK: BOE-A-2012-8625
+OK: BOE-A-2012-15647
+OK: BOE-A-2014-12651
+OK: BOE-A-2015-460
+OK: BOE-A-2015-462
+OK: BOE-A-2015-463
+OK: BOE-A-2015-1891
+OK: BOE-A-2015-1892
+OK: BOE-A-2015-3439
+Articulos unificados = 0
+Articulos derrogados = 0
+Documentos derrogados = 0
+Respondiendo preguntas
+Respondida pregunta 1/1
+Evaluating:   0%|          | 0/1 [00:00<?, ?it/s]Evaluating: 100%|██████████| 1/1 [00:03<00:00,  3.80s/it]Evaluating: 100%|██████████| 1/1 [00:03<00:00,  3.80s/it]
+Evaluating:   0%|          | 0/1 [00:00<?, ?it/s]Evaluating: 100%|██████████| 1/1 [00:00<00:00,  1.13it/s]Evaluating: 100%|██████████| 1/1 [00:00<00:00,  1.13it/s]
+Evaluating:   0%|          | 0/1 [00:00<?, ?it/s]Evaluating: 100%|██████████| 1/1 [00:01<00:00,  1.28s/it]Evaluating: 100%|██████████| 1/1 [00:01<00:00,  1.28s/it]
+Evaluating:   0%|          | 0/1 [00:00<?, ?it/s]Evaluating: 100%|██████████| 1/1 [00:03<00:00,  3.49s/it]Evaluating: 100%|██████████| 1/1 [00:03<00:00,  3.49s/it]
+Test finalizado.

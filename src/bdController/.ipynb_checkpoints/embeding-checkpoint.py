@@ -1,6 +1,12 @@
 from sentence_transformers import SentenceTransformer
 
-model = SentenceTransformer("all-MiniLM-L6-v2")
+#model = SentenceTransformer("all-MiniLM-L6-v2")
+
+
+model = SentenceTransformer(
+    "jinaai/jina-embeddings-v3",
+    trust_remote_code=True
+)
 
 def content_to_embedding(content: list[str]) -> list[list[float]]:
     """

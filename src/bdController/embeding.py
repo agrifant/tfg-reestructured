@@ -1,6 +1,12 @@
 from sentence_transformers import SentenceTransformer
 
-model = SentenceTransformer("all-MiniLM-L6-v2")
+#model = SentenceTransformer("all-MiniLM-L6-v2")
+
+
+model = SentenceTransformer(
+    "jinaai/jina-embeddings-v3",
+    trust_remote_code=True
+)
 
 def content_to_embedding(content: list[str]) -> list[list[float]]:
     """
@@ -12,5 +18,12 @@ def content_to_embedding(content: list[str]) -> list[list[float]]:
     Returns:
         Lista de embeddings, cada embedding es una lista de floats
     """
+    embeddings = model.encode(
+        content,
+        batch_size=32,
+        show_progress_bar=False,
+        task="text-matching",
+        truncate_dim=32
+    )
     embeddings = model.encode(content, batch_size=32, show_progress_bar=False)
-    return embeddings
+    return embeddings.tolist()

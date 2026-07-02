@@ -13,21 +13,36 @@ class rag():
 
     def newBoeDocument(self, idDocument: str)-> None:
         #Ejecutamos el pipeline
-        out = pipeline.pipeline(idDocument, self.BD,  self.delete_derrogations, self.unificated_versions)
+        out, art_unificated, art_delete, files_delete = pipeline.pipeline(idDocument, self.BD,  self.delete_derrogations, self.unificated_versions)
 
         if out==True:
+            print(f"Articulos unificados = {art_unificated}")
+            print(f"Articulos derrogados = {art_delete}")
+            print(f"Documentos derrogados = {files_delete}")
             print(f"OK: {idDocument}")
             return True
         else:
-            print(F"Error: {idDocument}")
+            print(f"Error: {idDocument}")
             return False
+        
     def newListBoesDocuments(self, idsDocuments):
-        salida=True
+        all_art_unificated = 0
+        all_art_delete = 0 
+        all_files_delete = 0
         for doc in idsDocuments:
-            aux=self.newBoeDocument(doc)
-            if aux==False:
-                salida=False
-        return salida
+            out, art_unificated, art_delete, files_delete = pipeline.pipeline(doc, self.BD,  self.delete_derrogations, self.unificated_versions)
+            all_art_unificated += art_unificated
+            all_art_delete += art_delete
+            all_files_delete += files_delete
+            if out==True:
+                print(f"OK: {doc}")
+            if out==False:
+                print(f"Error: {doc}")
+                return False
+        print(f"Articulos unificados = {all_art_unificated}")
+        print(f"Articulos derrogados = {all_art_delete}")
+        print(f"Documentos derrogados = {all_files_delete}")
+        return True
 
     def purgarBasesDatos(self)-> None:
         self.BD.purge()
@@ -56,4 +71,7 @@ class rag():
 
     def changeMinThreshold(self, threshold):
         self.min_theshold=threshold
+
+    def change_top_k(self, new_top):
+        self.nRetrieval=new_top
         

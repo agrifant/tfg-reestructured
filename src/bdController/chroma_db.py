@@ -55,7 +55,7 @@ class chroma():
     def changeMetadata(self, data, type_metadata, new_value):
         try:
             if not data:
-                return False
+                return False, 0
     
             # 1. Build where
             if len(data) == 1:
@@ -94,7 +94,7 @@ class chroma():
     
         except Exception as e:
             print(f"Error cambiando metadata: {e}")
-            return False
+            return False , 0
 
     def deleteFromMetadata(self, where):
         try:

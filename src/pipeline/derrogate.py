@@ -134,7 +134,16 @@ def main_derrogate(BD, disposiciones):
                     {"num_articulo": norma["target"]}
                 ])
 
+    files_deleted=0
+    art_deleted=0
     #Cambiamos de la metadata el estado a derrogado
     if to_delete != []:
         for i in to_delete:
-            BD.changeMetadata(i, "estado", "derrogado")
+            out = BD.changeMetadata(i, "estado", "derrogado")
+            if out==True:
+                if len(i)==1:
+                    files_deleted+=1
+                else:
+                    art_deleted+=1
+
+    return files_deleted, art_deleted

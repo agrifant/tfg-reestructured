@@ -20,7 +20,6 @@ from ragas.metrics import (
     context_precision
 )
 
-output_file= "data/ragas_dataset.jsonl"
 
 def make_question(texts:str)->list[json]:
     intentos=3
@@ -91,7 +90,7 @@ def make_question(texts:str)->list[json]:
                 return []
     
 
-def generarPreguntas(question_num, output_file=output_file, id_boe="BOE-A-2015-3439"):
+def generarPreguntas(question_num, output_file, id_boe="BOE-A-2015-3439"):
     # Obtenemos el documento del que queremos hacer las preguntas
     documento = pipe.generarContextoPreguntas(id_boe)
     
@@ -99,7 +98,6 @@ def generarPreguntas(question_num, output_file=output_file, id_boe="BOE-A-2015-3
     
     with open(output_file, "w", encoding="utf-8") as f:
         for i in range(question_num):
-
             # Barajamos los contextos
             random.shuffle(documento)
             context = documento[0]
@@ -118,40 +116,43 @@ def generarPreguntas(question_num, output_file=output_file, id_boe="BOE-A-2015-3
 
     print(f"Dataset guardado en {output_file}")
         
-def ReponderPreguntas(maquina, output_file=output_file):
-    all_questions_responded=[]
+def ResponderPreguntas(maquina, output_file, percent):
     with open(output_file, "r", encoding="utf-8") as f:
-        i=0
-        for line in f:
-            i+=1
-            data=json.loads(line)
-            answer, texts= maquina.preguntar(data["question"], True)
-            data["contexts"]=texts
-            data["answer"]=answer
-            all_questions_responded.append(data)
-            print(f"Respondido pregunta {i}")
+        lines = f.readlines()
+
+    total = len(lines)
+    num_preguntas = max(1, int(total * percent / 100))
+
+    all_questions_responded = []
+
+    for i, line in enumerate(lines[:num_preguntas], start=1):
+        data = json.loads(line)
+
+        answer, texts = maquina.preguntar(data["question"], True)
+        data["contexts"] = texts
+        data["answer"] = answer
+
+        all_questions_responded.append(data)
+
+        print(f"Respondida pregunta {i}/{num_preguntas}")
 
     return Dataset.from_list(all_questions_responded)
 
-def guararResultados(row, name, filename):
+def guararResultados(rows, filename):
     filename_csv = os.path.join(filename, "resultados.csv")
     os.makedirs(filename, exist_ok=True)
 
-    row["name"] = name
-
-    out_df = pd.DataFrame([row])  # ✔ UNA SOLA FILA
+    df = pd.DataFrame(rows)
 
     file_exists = os.path.isfile(filename_csv)
 
-    out_df.to_csv(
+    df.to_csv(
         filename_csv,
         mode="a",
         header=not file_exists,
         index=False,
         encoding="utf-8"
     )
-
-    print(f"Guardado en CSV: {row}")
 
 def make_grafica(file, title, name_col_x):
     file_input = os.path.join(file, "resultados.csv")
@@ -190,22 +191,29 @@ def make_grafica(file, title, name_col_x):
 
         plt.close()
     
-def ejecutarTest(maquina, name, filename, filename_test):
+def ejecutarTest(maquina, name, filename, filename_test, percent=100):
     #Respondemos las preguntas:
     print("Respondiendo preguntas")
-    data= ReponderPreguntas(maquina, filename_test)
+    data= ResponderPreguntas(maquina, filename_test, percent)
 
     #Hacemos el test con ragas
     
     llm = Ollama(model="llama3.1:8b")
 
     embeddings = HuggingFaceEmbeddings(
-        model_name="all-MiniLM-L6-v2"
+        model_name="jinaai/jina-embeddings-v3",
+        model_kwargs={
+            "trust_remote_code": True,
+        },
+        encode_kwargs={
+            "task": "text-matching",
+            "truncate_dim": 32,
+        },
     )
 
     metrics = [faithfulness, answer_relevancy, context_recall, context_precision]
 
-    rows = {}
+    all_rows = []
     
     for metric in metrics:
         result = evaluate(
@@ -220,19 +228,29 @@ def ejecutarTest(maquina, name, filename, filename_test):
     
         df = result.to_pandas()
     
-        ignore_cols = {"question", "answer", "contexts", "ground_truth"}
+        score_cols = [
+            "faithfulness",
+            "answer_relevancy",
+            "context_recall",
+            "context_precision"
+        ]
     
-        for col in df.columns:
-            if col in ignore_cols:
-                continue
-    
-            values = pd.to_numeric(df[col], errors="coerce").dropna()
-    
-            if len(values) == 0:
-                continue
-    
-            # ✔ guardas por métrica
-            rows[f"{metric.name}_mean"] = float(values.mean())
-            rows[f"{metric.name}_var"] = float(values.var())
 
-    guararResultados(rows, name, filename)
+        df = result.to_pandas()
+
+        col = metric.name
+    
+        values = pd.to_numeric(df[col], errors="coerce")
+    
+        for i, value in enumerate(values):
+            if pd.isna(value):
+                continue
+    
+            all_rows.append({
+                "name": name,
+                "metric": col,
+                "question_id": i,
+                "value": float(value)
+            })
+
+    guararResultados(all_rows, filename)

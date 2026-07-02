@@ -1,13 +1,14 @@
 import requests
 from ollama import chat
 import os
+import time
 
 #Variables globales para que tenga memoria
 max_memory_turns=3
 history_text=[]
 
 #Hacer pregunta a ollama
-def call_ollama(messages, format=None):
+def call_ollama(messages, format=None, num_predict=-1):
     """
     Función genérica que realiza la llamada al llm ollama
 
@@ -25,7 +26,8 @@ def call_ollama(messages, format=None):
         "messages": messages,
         "stream": False,
         "options": {
-            "temperature": 0
+            "temperature": 0,
+        "num_predict": num_predict
         }
     }
 
@@ -33,7 +35,7 @@ def call_ollama(messages, format=None):
         params["format"] = format
 
     response = chat(**params)
-
+    
     return response["message"]["content"].strip()
 
 #Funciones relacionadas con las preguntas del rag
@@ -118,7 +120,7 @@ def make_rag_question(query: str, chunks):
     #Escribirmos el promt
     prompt=pront_ask_rag(contexto_completo, query, history_text)
 
-    response=call_ollama(prompt)
+    response=call_ollama(prompt, None, 300)
     
     addToHistory(query, response)
     return response

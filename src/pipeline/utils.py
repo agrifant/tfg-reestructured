@@ -11,7 +11,16 @@ def extraer_ley(texto: str):
     return match.group(0) if match else None
 
 def normalizarFecha(fecha):
-    return datetime.strptime(fecha, "%Y%m%d").strftime("%Y-%m-%d")
+    if fecha is None:
+        return None 
+
+    if isinstance(fecha, str) and fecha.lower() == "none":
+        return None
+
+    try:
+        return datetime.strptime(fecha, "%Y%m%d").strftime("%Y-%m-%d")
+    except ValueError:
+        return None
 
 def normalizar_texto(texto: str) -> str:
     # 1. Normalización Unicode base (acentos, compatibilidad, etc.)

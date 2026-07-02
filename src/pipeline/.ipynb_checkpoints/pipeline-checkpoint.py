@@ -10,6 +10,8 @@ import os
 # python3 -m src.pipeline.pipeline
 
 def pipeline(documento: str, BD, delete_derrogations:bool, unificated_versions:bool)-> tuple:
+    art_unificated=0
+
     #Obtenemos el fichero del BOE en formato XML
     boe_file = fetcher.obtenerXML(documento)
     if boe_file is None:
@@ -34,8 +36,10 @@ def pipeline(documento: str, BD, delete_derrogations:bool, unificated_versions:b
     
     #Comprobamos si se tratan de artículos o disposiciones que modifican a otras y dejamos el artículo con la versión correspondiente
     if unificated_versions:
-        articulos = un.main_unificate(BD, articulos, datos_globales)
-        disposiciones = un.main_unificate(BD, disposiciones, datos_globales)
+        articulos, aux= un.main_unificate(BD, articulos, datos_globales)
+        art_unificated+=aux
+        disposiciones, aux = un.main_unificate(BD, disposiciones, datos_globales)
+        art_unificated+=aux
 
         
         
@@ -53,8 +57,10 @@ def pipeline(documento: str, BD, delete_derrogations:bool, unificated_versions:b
     
 
     #Comprobamos si hay que eliminar algo que sea derrogado
+    art_delete = 0
+    files_delete = 0
     if delete_derrogations:
-        der.main_derrogate(BD, disposiciones)
+        art_delete, files_delete = der.main_derrogate(BD, disposiciones)
 
     
     #Irelevante
@@ -76,7 +82,7 @@ def pipeline(documento: str, BD, delete_derrogations:bool, unificated_versions:b
     """
 
     #Añadimos los chunks a la BD
-    return BD.addDocument(articulos_chunked, disposiciones_chunked, texto_extra_chunked, documento)
+    return BD.addDocument(articulos_chunked, disposiciones_chunked, texto_extra_chunked, documento), art_unificated, art_delete, files_delete
 
 def generarContextoPreguntas(documento:str)->list:
     #Función que obtiene el boe que queremos
