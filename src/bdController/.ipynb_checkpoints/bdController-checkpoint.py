@@ -15,7 +15,7 @@ class bdController():
         self.bd_chroma= chroma.chroma()
         self.boe_ids=self.get_boe_documents_inserted()
     
-    def addDocument(self, articulos: dict, disposiciones:dict, textos_extras:dict, id_boe:str)-> bool:
+    def addDocument(self, articulos: dict, disposiciones:dict, textos_extras:dict, id_boe:str, dim:int)-> bool:
         #Comprobamos si ya existe el documento
         if self.existDocument(id_boe): return False
 
@@ -50,7 +50,7 @@ class bdController():
             content.append(texto["cuerpo"])
             metadata.append(metadata_add)
 
-        if self.bd_chroma.createNodes(ids,content, metadata):
+        if self.bd_chroma.createNodes(ids,content, metadata, dim):
             self.boe_ids.add(id_boe)
             self.save_boe_documents_inserted()
             return True
@@ -105,8 +105,8 @@ class bdController():
         boes_inserted=self.get_boe_documents_inserted()
         return list(boes_inserted)
 
-    def retrieval(self, query, n, threshold):
-        ids, scores = self.bd_chroma.semanticSearch(query, n)
+    def retrieval(self, query, n, threshold, dim):
+        ids, scores = self.bd_chroma.semanticSearch(query, n, dim)
         score_map = {i: s for i, s in zip(ids, scores)}
 
         articulos = ext.extract_articulos_more_than_one(query)
@@ -115,7 +115,7 @@ class bdController():
             for art in articulos:
                 where_filter = {"num_articulo": art}
                 ids_filtered, scores_filtered = self.bd_chroma.semanticSearchArticle(
-                    query, where_filter, n
+                    query, where_filter, n, dim
                 )
 
                 for i, s in zip(ids_filtered, scores_filtered):

@@ -4,148 +4,204 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import wilcoxon
 
-def make_grafica(
-    file1,
-    file2,
+
+def make_unique_lineal_grafic(
     title,
-    name_col_x="name",
-    dataset1_name="Dataset 1",
-    dataset2_name="Dataset 2"
+    output_dir,
+    *csv_files
 ):
-    df1 = pd.read_csv(os.path.join(file1, "resultados.csv"))
-    df2 = pd.read_csv(os.path.join(file2, "resultados.csv"))
 
-    df1["dataset"] = dataset1_name
-    df2["dataset"] = dataset2_name
+    #calculamos la media y varianza de cada dataset y cada metrica
+    data = {}
+    for csv_path, label in csv_files:
+        df = pd.read_csv(csv_path)
 
-    df = pd.concat([df1, df2], ignore_index=True)
+        stats = (
+            df.groupby("metric")["value"]
+              .agg(["mean", "var"])
+        )
 
-    x_col = name_col_x
+        for metric, row in stats.iterrows():
+            if metric not in data:
+                data[metric] = {
+                    "x": [],
+                    "mean": [],
+                    "var": []
+                }
 
-    required_cols = {x_col, "metric", "value", "dataset"}
-    if not required_cols.issubset(df.columns):
-        missing = required_cols - set(df.columns)
-        print(f"Faltan columnas: {missing}")
-        return
+            # Mantener el orden en que se reciben los datasets
+            data[metric]["x"].append(label)
+            data[metric]["mean"].append(row["mean"])
+            data[metric]["var"].append(row["var"])
 
-    metrics = sorted(df["metric"].dropna().unique())
-    datasets = [dataset1_name, dataset2_name]
+    os.makedirs(output_dir, exist_ok=True)
 
-    x = np.arange(len(metrics))
 
-    width = 0.35  # dos barras → centradas
-
-    colors = {
-        dataset1_name: "steelblue",
-        dataset2_name: "orange"
-    }
-
+    
+    # Grafica de la media
     plt.figure(figsize=(14, 7))
 
-    for i, dataset in enumerate(datasets):
-
-        subset = df[df["dataset"] == dataset]
-
-        values = (
-            subset.groupby("metric")["value"]
-            .mean()
-            .reindex(metrics)
-            .values
+    for metric, values in data.items():
+        plt.plot(
+            values["x"],
+            values["mean"],
+            marker="o",
+            linewidth=2,
+            label=metric
         )
 
-        # 🔥 clave: centrado perfecto por métrica
-        offset = (i - 0.5) * width
-
-        plt.bar(
-            x + offset,
-            values,
-            width=width,
-            label=dataset,
-            color=colors[dataset],
-            alpha=0.9
-        )
-
-    plt.xticks(x, metrics, rotation=25)
-    plt.ylabel("Score")
-    plt.title(title)
-
-    plt.legend(title="Dataset")
-    plt.tight_layout()
+    plt.title(f"{title} - Media")
+    plt.xlabel("Tamaño")
+    plt.ylabel("Media")
+    plt.grid(True)
+    plt.legend()
 
     plt.savefig(
-        os.path.join(file1, "metricas_comparadas.png"),
+        os.path.join(output_dir, f"{title}_media.png"),
         dpi=300,
         bbox_inches="tight"
     )
 
     plt.close()
 
-def make_grafica_lineas(
-    *csv_files,
-    output_dir=".",
-    title="Comparación de métricas",
-    name_col_x="name",
-):
-    """
-    Recibe un número indeterminado de carpetas que contienen un
-    'resultados.csv' y genera una gráfica de líneas para cada métrica.
 
-    Ejemplo:
-        make_grafica_lineas(
-            "data/top1",
-            "data/top3",
-            "data/top5",
-            output_dir="graficas"
+    # Grafica de la varianza
+
+    plt.figure(figsize=(14, 7))
+
+    for metric, values in data.items():
+        plt.plot(
+            values["x"],
+            values["var"],
+            marker="o",
+            linewidth=2,
+            label=metric
         )
-    """
 
-    dfs = []
+    plt.title(f"{title} - Varianza")
+    plt.xlabel("Tamaño")
+    plt.ylabel("Varianza")
+    plt.grid(True)
+    plt.legend()
 
-    for folder in csv_files:
-        csv_path = os.path.join(folder, "resultados.csv")
+    plt.savefig(
+        os.path.join(output_dir, f"{title}_varianza.png"),
+        dpi=300,
+        bbox_inches="tight"
+    )
 
-        df = pd.read_csv(csv_path)
+    plt.close()
+    
 
-        required = {name_col_x, "metric", "value"}
-        if not required.issubset(df.columns):
-            raise ValueError(
-                f"{csv_path} no contiene las columnas {required}"
+
+
+def make_compare_lineal_grafic(
+    title,
+    output_dir,
+    groups
+):
+
+    def procesar(grupo):
+        data = {}
+
+        for csv_path, label in grupo:
+            df = pd.read_csv(csv_path)
+
+            stats = (
+                df.groupby("metric")["value"]
+                .agg(["mean", "var"])
             )
 
-        dfs.append(df)
+            for metric, row in stats.iterrows():
+                data.setdefault(metric, {
+                    "x": [],
+                    "mean": [],
+                    "var": []
+                })
 
-    df = pd.concat(dfs, ignore_index=True)
+                data[metric]["x"].append(label)
+                data[metric]["mean"].append(row["mean"])
+                data[metric]["var"].append(row["var"])
 
-    metrics = sorted(df["metric"].unique())
+        return data
 
-    for metric in metrics:
+    # Procesar todos los grupos
+    processed_groups = {
+        group_name: procesar(group_data)
+        for group_name, group_data in groups
+    }
 
-        plt.figure(figsize=(10, 6))
+    os.makedirs(output_dir, exist_ok=True)
 
-        subset = (
-            df[df["metric"] == metric]
-            .groupby(name_col_x, as_index=False)["value"]
-            .mean()
-            .sort_values(name_col_x)
-        )
+    # Obtener todas las métricas presentes
+    metricas = sorted({
+        metric
+        for data in processed_groups.values()
+        for metric in data.keys()
+    })
 
-        plt.plot(
-            subset[name_col_x],
-            subset["value"],
-            marker="o",
-            linewidth=2
-        )
+    for metric in metricas:
 
-        plt.title(f"{title} - {metric}")
-        plt.xlabel("Threshold")
-        plt.ylabel("Score")
-        plt.ylim(0, 1)
-        plt.grid(True, alpha=0.3)
+        # =======================
+        # MEDIA
+        # =======================
 
-        plt.tight_layout()
+        plt.figure(figsize=(14, 7))
+
+        for group_name, data in processed_groups.items():
+
+            if metric not in data:
+                continue
+
+            plt.plot(
+                data[metric]["x"],
+                data[metric]["mean"],
+                marker="o",
+                linewidth=2,
+                label=group_name
+            )
+
+        plt.title(f"{title} - {metric} (Media)")
+        plt.xlabel("Tamaño")
+        plt.ylabel("Media")
+        plt.grid(True)
+        plt.legend()
 
         plt.savefig(
-            os.path.join(output_dir, f"{metric}.png"),
+            os.path.join(output_dir, f"{metric}_media.png"),
+            dpi=300,
+            bbox_inches="tight"
+        )
+
+        plt.close()
+
+        # =======================
+        # VARIANZA
+        # =======================
+
+        plt.figure(figsize=(14, 7))
+
+        for group_name, data in processed_groups.items():
+
+            if metric not in data:
+                continue
+
+            plt.plot(
+                data[metric]["x"],
+                data[metric]["var"],
+                marker="o",
+                linewidth=2,
+                label=group_name
+            )
+
+        plt.title(f"{title} - {metric} (Varianza)")
+        plt.xlabel("Tamaño")
+        plt.ylabel("Varianza")
+        plt.grid(True)
+        plt.legend()
+
+        plt.savefig(
+            os.path.join(output_dir, f"{metric}_varianza.png"),
             dpi=300,
             bbox_inches="tight"
         )
@@ -153,58 +209,265 @@ def make_grafica_lineas(
         plt.close()
 
 
+
+def make_boxplot(title, output_dir, csv_file):
+    df = pd.read_csv(csv_file)
+
+    # Mantener el orden de aparición de las métricas
+    metrics = df["metric"].unique()
+
+    data = [
+        df[df["metric"] == metric]["value"].values
+        for metric in metrics
+    ]
+
+    fig, ax = plt.subplots(figsize=(15, 8))
+
+    bp = ax.boxplot(
+        data,
+        tick_labels=metrics,
+        patch_artist=True,
+        showmeans=True,
+        meanline=True,
+        widths=0.6
+    )
+
+    # Colorear las cajas
+    for box in bp["boxes"]:
+        box.set(facecolor="#87CEEB", edgecolor="black", linewidth=1.5)
+
+    # Mediana
+    for median in bp["medians"]:
+        median.set(color="red", linewidth=2)
+
+    # Media
+    for mean in bp["means"]:
+        mean.set(color="darkgreen", linewidth=2)
+
+    # Bigotes
+    for whisker in bp["whiskers"]:
+        whisker.set(linewidth=1.5)
+
+    # Extremos
+    for cap in bp["caps"]:
+        cap.set(linewidth=1.5)
+
+    # Valores atípicos
+    for flier in bp["fliers"]:
+        flier.set(
+            marker="o",
+            markersize=5,
+            alpha=0.6
+        )
+
+    ax.set_title(title, fontsize=18, fontweight="bold")
+    ax.set_xlabel("Métrica", fontsize=13)
+    ax.set_ylabel("Valor", fontsize=13)
+
+    ax.grid(axis="y", linestyle="--", alpha=0.5)
+
+    plt.xticks(rotation=30, ha="right")
+
+    plt.tight_layout()
+
+    os.makedirs(output_dir, exist_ok=True)
+
+    plt.savefig(
+        os.path.join(output_dir, f"{title}_boxplot.png"),
+        dpi=300
+    )
+
+    plt.close()
+
+def make_barplot_compare(
+    title,
+    output_dir,
+    csv1,
+    label1,
+    csv2,
+    label2
+):
+
+    df1 = pd.read_csv(csv1)
+    df2 = pd.read_csv(csv2)
+
+    stats1 = (
+        df1.groupby("metric")["value"]
+        .agg(["mean", "var"])
+    )
+
+    stats2 = (
+        df2.groupby("metric")["value"]
+        .agg(["mean", "var"])
+    )
+
+    metrics = sorted(set(stats1.index) | set(stats2.index))
+
+    mean1 = [stats1.loc[m, "mean"] if m in stats1.index else 0 for m in metrics]
+    mean2 = [stats2.loc[m, "mean"] if m in stats2.index else 0 for m in metrics]
+
+    var1 = [stats1.loc[m, "var"] if m in stats1.index else 0 for m in metrics]
+    var2 = [stats2.loc[m, "var"] if m in stats2.index else 0 for m in metrics]
+
+    x = np.arange(len(metrics))
+    width = 0.35
+
+    os.makedirs(output_dir, exist_ok=True)
+
+    # =======================
+    # MEDIA
+    # =======================
+
+    fig, ax = plt.subplots(figsize=(12, 7))
+
+    ax.bar(
+        x - width / 2,
+        mean1,
+        width,
+        label=label1
+    )
+
+    ax.bar(
+        x + width / 2,
+        mean2,
+        width,
+        label=label2
+    )
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(metrics, rotation=30, ha="right")
+
+    ax.set_xlabel("Métrica")
+    ax.set_ylabel("Media")
+    ax.set_title(f"{title} - Media")
+
+    ax.grid(axis="y", linestyle="--", alpha=0.5)
+    ax.legend()
+
+    plt.tight_layout()
+
+    plt.savefig(
+        os.path.join(output_dir, f"{title}_media.png"),
+        dpi=300
+    )
+
+    plt.close()
+
+    # =======================
+    # VARIANZA
+    # =======================
+
+    fig, ax = plt.subplots(figsize=(12, 7))
+
+    ax.bar(
+        x - width / 2,
+        var1,
+        width,
+        label=label1
+    )
+
+    ax.bar(
+        x + width / 2,
+        var2,
+        width,
+        label=label2
+    )
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(metrics, rotation=30, ha="right")
+
+    ax.set_xlabel("Métrica")
+    ax.set_ylabel("Varianza")
+    ax.set_title(f"{title} - Varianza")
+
+    ax.grid(axis="y", linestyle="--", alpha=0.5)
+    ax.legend()
+
+    plt.tight_layout()
+
+    plt.savefig(
+        os.path.join(output_dir, f"{title}_varianza.png"),
+        dpi=300
+    )
+
+    plt.close()
+
+
+
+
 alpha = 0.05
 
-def testEstadistico(file_1, name_file_1, file_2, name_file_2):
-    dataset_1 = pd.read_csv(os.path.join(file_1, "resultados.csv"))
-    dataset_2 = pd.read_csv(os.path.join(file_2, "resultados.csv"))
+def testEstadistico(file_1, name_file_1, file_2, name_file_2, output_file):
+    dataset_1 = pd.read_csv(file_1)
+    dataset_2 = pd.read_csv(file_2)
 
-    metrics = ["faithfulness", "answer_relevancy", "context_recall", "context_precision"]
+    metrics = [
+        "faithfulness",
+        "answer_relevancy",
+        "context_recall",
+        "context_precision"
+    ]
+
+    resultados = []
 
     for metric in metrics:
+
         data_1 = dataset_1[dataset_1["metric"] == metric].copy()
         data_2 = dataset_2[dataset_2["metric"] == metric].copy()
 
         ids_1 = set(data_1["question_id"])
         ids_2 = set(data_2["question_id"])
 
-        # IDs que faltan
         faltan_en_1 = ids_2 - ids_1
         faltan_en_2 = ids_1 - ids_2
 
-        # Mostrar mensajes
-        #for qid in sorted(faltan_en_1):
-            # print(f"[{metric}] question_id {qid} no presente en dataset 1. Se elimina del dataset 2.")
-
-        #for qid in sorted(faltan_en_2):
-            # print(f"[{metric}] question_id {qid} no presente en dataset 2. Se elimina del dataset 1.")
-
-        # Eliminar los IDs que no están en ambos
         ids_comunes = ids_1 & ids_2
+
         data_1 = data_1[data_1["question_id"].isin(ids_comunes)]
         data_2 = data_2[data_2["question_id"].isin(ids_comunes)]
 
-        # Ordenar para que ambas tablas tengan el mismo orden
         data_1 = data_1.sort_values("question_id").reset_index(drop=True)
         data_2 = data_2.sort_values("question_id").reset_index(drop=True)
 
-        # Comprobación final
         assert data_1["question_id"].equals(data_2["question_id"])
-
-        # Obtenemos los vectores
 
         vector_1 = data_1["value"].to_numpy()
         vector_2 = data_2["value"].to_numpy()
 
         stat, p = wilcoxon(vector_1, vector_2, zero_method="pratt")
 
-        print(f"\n{metric}")
-        print(f"W = {stat:.3f}")
-        print(f"p = {p:.4f}")
-        print(f"Media {name_file_1}: {vector_1.mean():.4f}")
-        print(f"Media {name_file_2}: {vector_2.mean():.4f}")
-        print(f"No se han tenido en cuenta {len(faltan_en_1) + len(faltan_en_2)} preguntas")
-        if p < alpha:
-            print("Diferencia estadísticamente significativa\n")
-        else:
-            print("No se detectan diferencias significativas\n")
+        resultados.append({
+            "metric": metric.replace("_", "\\_"),
+            "mean1": vector_1.mean(),
+            "mean2": vector_2.mean(),
+            "W": stat,
+            "p": p,
+            "significant": "Sí" if p < alpha else "No"
+        })
+
+    # ============================
+    # Guardar tabla LaTeX
+    # ============================
+
+    with open(output_file, "w", encoding="utf8") as f:
+
+        f.write("\\begin{tabular}{lccccc}\n")
+        f.write("\\toprule\n")
+        f.write(
+            f"Métrica & {name_file_1} & {name_file_2} & $W$ & $p$ & Sig.\\\\\n"
+        )
+        f.write("\\midrule\n")
+
+        for r in resultados:
+
+            f.write(
+                f"{r['metric']} & "
+                f"{r['mean1']:.4f} & "
+                f"{r['mean2']:.4f} & "
+                f"{r['W']:.1f} & "
+                f"{r['p']:.4f} & "
+                f"{r['significant']}\\\\\n"
+            )
+
+        f.write("\\bottomrule\n")
+        f.write("\\end{tabular}\n")

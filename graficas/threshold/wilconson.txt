@@ -1,0 +1,10 @@
+\begin{tabular}{lccccc}
+\toprule
+Métrica & Base Model & STF & $W$ & $p$ & Sig.\\
+\midrule
+faithfulness & 0.6243 & 0.6294 & 1869.5 & 0.8780 & No\\
+answer\_relevancy & 0.5595 & 0.5875 & 2006.0 & 0.6140 & No\\
+context\_recall & 0.8235 & 0.8210 & 292.5 & 0.7142 & No\\
+context\_precision & 0.8040 & 0.8290 & 521.0 & 0.0402 & Sí\\
+\bottomrule
+\end{tabular}

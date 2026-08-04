@@ -5,122 +5,95 @@ with open("identificadores.txt", "r", encoding="utf-8") as f:
     PRUEBA = f.read().splitlines()
 
 
-
-#Normal top_k=5
 maquina=rag.rag(False, False, 0.0)
-maquina.purgarBasesDatos()
-maquina.change_top_k(5)
-aux=maquina.newListBoesDocuments(PRUEBA)
-
-if aux:
-    test.ejecutarTest(maquina, "normal", "data/mecanismoBase/top_6", "data/ragas_dataset_100.jsonl")
-else:
-    print("Abortado")
-
-#Normal top_k=10
-maquina=rag.rag(False, False, 0.0)
-maquina.purgarBasesDatos()
-maquina.change_top_k(5)
-aux=maquina.newListBoesDocuments(PRUEBA)
-
-if aux:
-    test.ejecutarTest(maquina, "normal", "data/mecanismoBase/top_6", "data/ragas_dataset_100.jsonl")
-else:
-    print("Abortado")
-
-#Normal top_k=20
-maquina=rag.rag(False, False, 0.0)
-maquina.purgarBasesDatos()
-maquina.change_top_k(5)
-aux=maquina.newListBoesDocuments(PRUEBA)
-
-if aux:
-    test.ejecutarTest(maquina, "normal", "data/mecanismoBase/top_6", "data/ragas_dataset_100.jsonl")
-else:
-    print("Abortado")
-
-
-#Normal top_k=50
-maquina=rag.rag(False, False, 0.0)
-maquina.purgarBasesDatos()
-maquina.change_top_k(5)
-aux=maquina.newListBoesDocuments(PRUEBA)
-
-if aux:
-    test.ejecutarTest(maquina, "normal", "data/mecanismoBase/top_6", "data/ragas_dataset_100.jsonl")
-else:
-    print("Abortado")
 
 """
-#Eliminar derrogados
-maquina=rag.rag(True, False, 0.0)
+humbrales=[0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+
+
+# Elección optimo threshold
 maquina.purgarBasesDatos()
 aux=maquina.newListBoesDocuments(PRUEBA)
 
 if aux:
-    test.ejecutarTest(maquina, "delete", "data/delete/top_5", "data/ragas_dataset_100.jsonl")
-
-#Unificar apartados
-maquina=rag.rag(False, True, 0.0)
-maquina.purgarBasesDatos()
-aux=maquina.newListBoesDocuments(PRUEBA)
-
-if aux:
-    test.ejecutarTest(maquina, "unificate", "data/unificate/top_5", "data/ragas_dataset_100.jsonl")
-
-
-#Thresholds
-maquina=rag.rag(False, False, 0.0)
-maquina.purgarBasesDatos()
-aux=maquina.newListBoesDocuments(PRUEBA)
+    for i in humbrales:
+        nombre = str(i).replace(".", "_")
+        
+        maquina.changeMinThreshold(i)
+        test.ejecutarTest(maquina, f"{i}", "data/chooseThreshols/", f"{nombre}.csv", "data/ragas_dataset_100.jsonl", 30)
+else:
+    print("Abortado")
+"""
+        
 
 
-if aux:
-    test.ejecutarTest(maquina, "0.0", "data/threshold/top_5/0_0", "data/ragas_dataset_100.jsonl")
 
-    maquina.changeMinThreshold(0.1)
-    test.ejecutarTest(maquina, "0.1", "data/threshold/top_5/0_1", "data/ragas_dataset_100.jsonl")
+
+# dimensions = [1024, 768, 512, 384, 256, 128, 64, 32, 4]
+
+dimensions = [16, 8]
+
+for dim in dimensions:
+    maquina.change_dim(dim)
+
     
-    maquina.changeMinThreshold(0.2)
-    test.ejecutarTest(maquina, "0.2", "data/threshold/top_5/0_2", "data/ragas_dataset_100.jsonl")
+    print(f"MecanismoBase con dim {dim}")
+    maquina.purgarBasesDatos()
+        
+    maquina.changeDerogations(False)
+    maquina.changeUnificate(False)
+    maquina.changeMinThreshold(0.0)
     
-    maquina.changeMinThreshold(0.3)
-    test.ejecutarTest(maquina, "0.3", "data/threshold/top_5/0_3", "data/ragas_dataset_100.jsonl")
+    aux=maquina.newListBoesDocuments(PRUEBA)
+        
+    if aux:
+        test.ejecutarTest(maquina, "mecanismoBase", f"data/{dim}/","mecanismoBase.csv", "data/ragas_dataset_100.jsonl")
+    else:
+        print("Abortado")
+
+
+
     
-    maquina.changeMinThreshold(0.4)
-    test.ejecutarTest(maquina, "0.4", "data/threshold/top_5/0_4", "data/ragas_dataset_100.jsonl")
+    print(f"Delete con dim {dim}")
+    maquina.purgarBasesDatos()
+        
+    maquina.changeDerogations(True)
+    maquina.changeUnificate(False)
+    maquina.changeMinThreshold(0.0)
     
+    aux=maquina.newListBoesDocuments(PRUEBA)
+        
+    if aux:
+        test.ejecutarTest(maquina, "Delete", f"data/{dim}/", "delete.csv", "data/ragas_dataset_100.jsonl")
+    else:
+        print("Abortado")
+
+
+    print(f"Unificate con dim {dim}")
+    maquina.purgarBasesDatos()
+        
+    maquina.changeDerogations(False)
+    maquina.changeUnificate(True)
+    maquina.changeMinThreshold(0.0)
+    
+    aux=maquina.newListBoesDocuments(PRUEBA)
+        
+    if aux:
+        test.ejecutarTest(maquina, "Unificate", f"data/{dim}/", "unificate.csv", "data/ragas_dataset_100.jsonl")
+    else:
+        print("Abortado")
+    
+
+    print(f"Threshold con dim {dim}")
+    maquina.purgarBasesDatos()
+        
+    maquina.changeDerogations(False)
+    maquina.changeUnificate(False)
     maquina.changeMinThreshold(0.5)
-    test.ejecutarTest(maquina, "0.5", "data/threshold/top_5/0_5", "data/ragas_dataset_100.jsonl")
     
-    maquina.changeMinThreshold(0.6)
-    test.ejecutarTest(maquina, "0.6", "data/threshold/top_5/0_6", "data/ragas_dataset_100.jsonl")
-    
-    maquina.changeMinThreshold(0.7)
-    test.ejecutarTest(maquina, "0.7", "data/threshold/top_5/0_7", "data/ragas_dataset_100.jsonl")
-    
-    maquina.changeMinThreshold(0.8)
-    test.ejecutarTest(maquina, "0.8", "data/threshold/top_5/0_8", "data/ragas_dataset_100.jsonl")
-
-    maquina.changeMinThreshold(0.9)
-    test.ejecutarTest(maquina, "0.9", "data/threshold/top_5/0_9", "data/ragas_dataset_100.jsonl")
-
-
-
-#optimoThreshold
-maquina=rag.rag(False, False, 0.5)
-maquina.purgarBasesDatos()
-aux=maquina.newListBoesDocuments(PRUEBA)
-
-if aux:
-    test.ejecutarTest(maquina, "threshold0-5", "data/optimoThreshold/top_5", "data/ragas_dataset_100.jsonl")
-
-
-#Todos
-maquina=rag.rag(True, True, 0.5)
-maquina.purgarBasesDatos()
-aux=maquina.newListBoesDocuments(PRUEBA)
-
-if aux:
-    test.ejecutarTest(maquina, "todos", "data/todos/top_5", "data/ragas_dataset_100.jsonl")
-"""
+    aux=maquina.newListBoesDocuments(PRUEBA)
+        
+    if aux:
+        test.ejecutarTest(maquina, "Threshold", f"data/{dim}/", "threshold.csv", "data/ragas_dataset_100.jsonl")
+    else:
+        print("Abortado")

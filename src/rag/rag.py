@@ -5,15 +5,16 @@ import src.bdController.bdController as bdController
 class rag():
     def __init__(self, delete=False, unificate=False, threshold=0):
         self.BD = bdController.bdController()
-        self.nRetrieval=5
+        self.nRetrieval=10
         self.delete_derrogations=delete
         self.unificated_versions=unificate
         self.min_theshold=threshold
+        self.dim=1024
         
 
     def newBoeDocument(self, idDocument: str)-> None:
         #Ejecutamos el pipeline
-        out, art_unificated, art_delete, files_delete = pipeline.pipeline(idDocument, self.BD,  self.delete_derrogations, self.unificated_versions)
+        out, art_unificated, art_delete, files_delete = pipeline.pipeline(idDocument, self.BD,  self.delete_derrogations, self.unificated_versions, self.dim)
 
         if out==True:
             print(f"Articulos unificados = {art_unificated}")
@@ -30,12 +31,10 @@ class rag():
         all_art_delete = 0 
         all_files_delete = 0
         for doc in idsDocuments:
-            out, art_unificated, art_delete, files_delete = pipeline.pipeline(doc, self.BD,  self.delete_derrogations, self.unificated_versions)
+            out, art_unificated, art_delete, files_delete = pipeline.pipeline(doc, self.BD,  self.delete_derrogations, self.unificated_versions, self.dim)
             all_art_unificated += art_unificated
             all_art_delete += art_delete
             all_files_delete += files_delete
-            if out==True:
-                print(f"OK: {doc}")
             if out==False:
                 print(f"Error: {doc}")
                 return False
@@ -58,7 +57,7 @@ class rag():
 
     def preguntar(self, query: str, is_testing=False)-> str:
         #Obtenemos los documentos de la BD
-        texts=self.BD.retrieval(query, self.nRetrieval, self.min_theshold)
+        texts=self.BD.retrieval(query, self.nRetrieval, self.min_theshold, self.dim)
 
         #llamamos al llm
         if is_testing:
@@ -66,12 +65,18 @@ class rag():
         else:
             return callToLLM.make_rag_question(query, texts)
 
-    def change_min_theshold(self, theshold):
-        self.min_theshold=theshold
-
     def changeMinThreshold(self, threshold):
         self.min_theshold=threshold
 
+    def changeDerogations(self, derogation):
+        self.delete_derrogations=derogation
+
+    def changeUnificate(self, unificate):
+        self.unificated_versions=unificate
+
     def change_top_k(self, new_top):
         self.nRetrieval=new_top
+
+    def change_dim(self, new_dim):
+        self.dim=new_dim
         

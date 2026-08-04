@@ -46,10 +46,8 @@ def chunking(texto: str, out: list, MAX_TOKENS: int, MIN_TOKENS: int, OVERLAP: f
 
         stop (int):
             Controla el nivel de recursión del algoritmo:
-                0 → dividir por saltos de línea
-                1 → dividir por apartados (a), b), ...)
-                2 → dividir por puntos
-                3 → división por ventana con overlap
+                1 → dividir por saltos de línea
+                2 → división por ventana con overlap
 
     Returns:
         None

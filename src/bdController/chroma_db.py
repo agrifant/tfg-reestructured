@@ -20,12 +20,12 @@ class chroma():
         )
     
     #CREATE
-    def createNodes(self, ids:list[str], content:list[str], metadata:list[str]) -> bool:
+    def createNodes(self, ids:list[str], content:list[str], metadata:list[str], dim:int) -> bool:
         try:
             collection = self.get_collection()
 
             # embeddings
-            content_embedded = embedding.content_to_embedding(content)
+            content_embedded = embedding.content_to_embedding(content, dim)
 
             collection.add(
                 ids=ids,
@@ -123,14 +123,14 @@ class chroma():
         return self.deleteFromMetadata({"id_boe": id_document})
 
     #SEARCH/OTHER   
-    def semanticSearch(self, query: str, n_results: int = 1) -> tuple[list[str], list[float]]:
+    def semanticSearch(self, query: str, n_results,  dim) -> tuple[list[str], list[float]]:
         try:
             collection = self.get_collection()
 
-            query_embedding = embedding.content_to_embedding(query)
+            query_embedding = embedding.content_to_embedding([query], dim)
 
             results = collection.query(
-                query_embeddings=[query_embedding],
+                query_embeddings=query_embedding,
                 n_results=n_results,
                  where={"estado": "vigente"},
                 include=["distances"]
@@ -146,7 +146,7 @@ class chroma():
             print(f"Error en la consulta: {e}")
             return [], []
 
-    def semanticSearchArticle(self, query: str, where_filter, n_results: int = 1)-> tuple[list[str], list[float]]:
+    def semanticSearchArticle(self, query: str, where_filter, n_results: int, dim)-> tuple[list[str], list[float]]:
         try:
             base_conditions = []
 
@@ -159,10 +159,10 @@ class chroma():
             
             collection = self.get_collection()
 
-            query_embedding = embedding.content_to_embedding(query)
+            query_embedding = embedding.content_to_embedding([query], dim)
 
             results = collection.query(
-                query_embeddings=[query_embedding],
+                query_embeddings=query_embedding,
                 n_results=n_results,
                 include=["distances"],
                 where=where

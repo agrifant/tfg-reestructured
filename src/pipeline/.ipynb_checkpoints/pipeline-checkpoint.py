@@ -13,9 +13,15 @@ def pipeline(documento: str, BD, delete_derrogations:bool, unificated_versions:b
     art_unificated=0
 
     #Obtenemos el fichero del BOE en formato XML
-    boe_file = fetcher.obtenerXML(documento)
-    if boe_file is None:
-        return False
+    intentos = 3
+
+    for _ in range(intentos):
+        boe_file = fetcher.obtenerXML(documento)
+        if boe_file is not None:
+            break
+    else:
+        return False, 0, 0, 0
+        
 
     
     #Obtenemos los diferentes datos que vamos a extraer del fichero del BOE

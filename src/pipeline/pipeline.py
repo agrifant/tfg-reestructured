@@ -9,13 +9,19 @@ import json
 import os
 # python3 -m src.pipeline.pipeline
 
-def pipeline(documento: str, BD, delete_derrogations:bool, unificated_versions:bool)-> tuple:
+def pipeline(documento: str, BD, delete_derrogations:bool, unificated_versions:bool, dim:int)-> tuple:
     art_unificated=0
 
     #Obtenemos el fichero del BOE en formato XML
-    boe_file = fetcher.obtenerXML(documento)
-    if boe_file is None:
-        return False
+    intentos = 3
+
+    for _ in range(intentos):
+        boe_file = fetcher.obtenerXML(documento)
+        if boe_file is not None:
+            break
+    else:
+        return False, 0, 0, 0
+        
 
     
     #Obtenemos los diferentes datos que vamos a extraer del fichero del BOE
@@ -82,7 +88,7 @@ def pipeline(documento: str, BD, delete_derrogations:bool, unificated_versions:b
     """
 
     #Añadimos los chunks a la BD
-    return BD.addDocument(articulos_chunked, disposiciones_chunked, texto_extra_chunked, documento), art_unificated, art_delete, files_delete
+    return BD.addDocument(articulos_chunked, disposiciones_chunked, texto_extra_chunked, documento, dim), art_unificated, art_delete, files_delete
 
 def generarContextoPreguntas(documento:str)->list:
     #Función que obtiene el boe que queremos

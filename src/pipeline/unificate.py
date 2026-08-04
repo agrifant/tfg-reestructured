@@ -117,6 +117,7 @@ def extraerSubarticulos(texto):
 
     return con_patron
 
+"""
 def extraerSubarticulos_prev(texto):
     PATRON = re.compile(r"^(uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|\d+)\.\s")
     
@@ -142,7 +143,8 @@ def extraerSubarticulos_prev(texto):
                 actual["texto"] += " " + linea
 
     return subarticulos
-    
+"""
+
 def main_unificate(BD, articulos, datos_globales):
     all_articulos=[]
     num_art_unificate=0

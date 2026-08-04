@@ -20,6 +20,19 @@ from ragas.metrics import (
     context_precision
 )
 
+embeddings = HuggingFaceEmbeddings(
+        model_name="jinaai/jina-embeddings-v3",
+        model_kwargs={
+            "trust_remote_code": True,
+        },
+        encode_kwargs={
+            "task": "text-matching",
+            "truncate_dim": 1024,
+        },
+    )
+
+llm = Ollama(model="llama3.1:8b")
+
 
 def make_question(texts:str)->list[json]:
     intentos=3
@@ -115,6 +128,13 @@ def generarPreguntas(question_num, output_file, id_boe="BOE-A-2015-3439"):
             f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
     print(f"Dataset guardado en {output_file}")
+
+def count_articles(id_boe="BOE-A-2015-3439"):
+    # Obtenemos el documento del que queremos hacer las preguntas
+    documento = pipe.generarContextoPreguntas(id_boe)
+
+    print(len(documento))
+
         
 def ResponderPreguntas(maquina, output_file, percent):
     with open(output_file, "r", encoding="utf-8") as f:
@@ -123,6 +143,7 @@ def ResponderPreguntas(maquina, output_file, percent):
     total = len(lines)
     num_preguntas = max(1, int(total * percent / 100))
 
+    
     all_questions_responded = []
 
     for i, line in enumerate(lines[:num_preguntas], start=1):
@@ -138,78 +159,28 @@ def ResponderPreguntas(maquina, output_file, percent):
 
     return Dataset.from_list(all_questions_responded)
 
-def guararResultados(rows, filename):
-    filename_csv = os.path.join(filename, "resultados.csv")
-    os.makedirs(filename, exist_ok=True)
+def guardarResultados(rows, carpeta, filename):
+    os.makedirs(carpeta, exist_ok=True)
+
+    ruta = os.path.join(carpeta, filename)
 
     df = pd.DataFrame(rows)
 
-    file_exists = os.path.isfile(filename_csv)
+    file_exists = os.path.isfile(ruta)
 
     df.to_csv(
-        filename_csv,
+        ruta,
         mode="a",
         header=not file_exists,
         index=False,
         encoding="utf-8"
     )
 
-def make_grafica(file, title, name_col_x):
-    file_input = os.path.join(file, "resultados.csv")
     
-    df = pd.read_csv(file_input)
-
-    x_col = "name"
-    columnas = ["faithfulness_mean", "answer_relevancy_mean", "context_recall_mean", "context_precision_mean"]
-
-    for col in columnas:
-        if x_col not in df.columns:
-            print(f"Columna '{x_col}' no encontrada")
-            return
-
-        if col not in df.columns:
-            print(f"Columna '{col}' no encontrada")
-            continue
-
-        plt.figure(figsize=(10, 6))
-        plt.plot(df[x_col], df[col], marker="o")
-
-        plt.xlabel(name_col_x)
-        plt.ylabel(col)
-        plt.title(title)
-
-        #plt.ylim(0, 1)
-        
-        # Rotar etiquetas si son nombres largos
-        plt.xticks(rotation=45)
-
-        plt.savefig(
-            f"{file}/{col}.png",
-            dpi=300,
-            bbox_inches="tight"
-        )
-
-        plt.close()
-    
-def ejecutarTest(maquina, name, filename, filename_test, percent=100):
+def ejecutarTest(maquina, name, carpet, filename, filename_test, percent=100):
     #Respondemos las preguntas:
     print("Respondiendo preguntas")
     data= ResponderPreguntas(maquina, filename_test, percent)
-
-    #Hacemos el test con ragas
-    
-    llm = Ollama(model="llama3.1:8b")
-
-    embeddings = HuggingFaceEmbeddings(
-        model_name="jinaai/jina-embeddings-v3",
-        model_kwargs={
-            "trust_remote_code": True,
-        },
-        encode_kwargs={
-            "task": "text-matching",
-            "truncate_dim": 32,
-        },
-    )
 
     metrics = [faithfulness, answer_relevancy, context_recall, context_precision]
 
@@ -253,4 +224,4 @@ def ejecutarTest(maquina, name, filename, filename_test, percent=100):
                 "value": float(value)
             })
 
-    guararResultados(all_rows, filename)
+    guardarResultados(all_rows, carpet, filename)
