@@ -5,6 +5,50 @@ import requests
 API_URL = "http://127.0.0.1:8002"
 
 st.title("RAG Legislativo")
+st.sidebar.header("Configuración")
+
+# ------------------ API CALLS ------------------
+def get_umbral():
+    #Añadir api del backend
+    return 0.4
+
+
+def update_umbral():
+    #Añadir api del backend
+    print("Actualizando ...")
+
+
+def get_rag_response(pregunta):
+    try:
+        response = requests.post(f"{API_URL}/preguntar", json={"query": pregunta})
+
+        return response.json().get("respuesta", "Error generando la resupesta. Disculpen las molestias")
+    except Exception:
+        return "Error generando la resupesta. Disculpen las molestias"
+
+
+# -------------------- Configuración del umbral --------------------
+
+# Obtener el umbral actual del backend
+if "umbral" not in st.session_state:
+    st.session_state.umbral = get_umbral()
+
+
+# barra elección umbral
+st.sidebar.slider(
+    "Umbral de similitud",
+    min_value=0.0,
+    max_value=1.0,
+    step=0.05,
+    key="umbral",
+    on_change=update_umbral,
+    help=(
+        "Configura el parámetro Similarity Threshold Filtering. "
+        "Los valores más altos hacen que el filtro sea más restrictivo. "
+        "Para desactivar el filtrado, establece el umbral en 0."
+    )
+)
+
 
 # -------------------- Sección de Chat --------------------
 if "mensajes" not in st.session_state:
@@ -16,16 +60,12 @@ if pregunta:
     st.session_state.mensajes.append(("user", pregunta))
     
     with st.spinner("Generando respuesta..."):
-        try:
-            response = requests.post(f"{API_URL}/preguntar", json={"query": pregunta})
-            response.raise_for_status()
-            respuesta = response.json().get("respuesta", "No hay respuesta")
-        except requests.exceptions.RequestException as e:
-            respuesta = f"Error al conectar con la API: {e}"
+        respuesta=get_rag_response(pregunta)
     
     st.session_state.mensajes.append(("assistant", respuesta))
 
-# Mostrar historial de chat
+
+# -------------------- Historial --------------------
 for rol, mensaje in st.session_state.mensajes:
     with st.chat_message(rol):
         st.text(mensaje)
