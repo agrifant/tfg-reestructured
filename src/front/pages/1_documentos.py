@@ -6,8 +6,15 @@ import requests
 API_URL = "http://127.0.0.1:8002"
 
 # ------------------ API CALLS ------------------
-def obtener_documentos():
-    #Modificar api para solo devolver los de la paginación
+def obtener_documentos(page):
+    #
+    #Devuleve una lista con los nombres y el número de documentos insertados
+    if page==1:
+        return ["Boe-1", "Boe-2", "Boe-3"], 11, 3
+    else:
+        return ["Boe-3", "Boe-4", "Boe-5"], 11, 3
+
+    """
     try:
         res = requests.get(f"{API_URL}/documents")
         if res.status_code == 200:
@@ -18,6 +25,7 @@ def obtener_documentos():
     except Exception:
         st.error("No se pudo conectar con la API")
         return []
+    """
 
 
 def eliminar_documento(doc_id):
@@ -95,20 +103,31 @@ def change_update():
     
     print(f"Update {estado}")
 
+def delete_doc(id):
+    print(f"Eliminando doc {id}")
+
 
 # ------------------ UI ------------------
 st.title("Gestión de documentos")
 
-documentos = obtener_documentos()
-total_docs = len(documentos)
+if "pagina" not in st.session_state:
+    st.session_state.pagina = 1
+    
+documentos, total_docs, max_pages = obtener_documentos(st.session_state.pagina)
+
+
+# Mostrar número de documentos
+st.subheader(f"Total de documentos guardados: {total_docs}")
+
+st.divider()
 
 
 # Obtener el estado inicial desde una función
 delete, update = obtener_estado()
 
 
-# Botones de los mecanismos delete y unificate
-col1, col2 = st.columns(2)
+# Botones de los mecanismos delete, unificate y purgar
+col1, col2, col3 = st.columns(3)
 
 with col1:
     # El toggle SOLO muestra el estado
@@ -129,42 +148,38 @@ with col2:
     )
 
 
-# Mostrar número de documentos
-st.subheader(f"Total de documentos guardados: {total_docs}")
-
-
-# Añadir documentos y purgar base de datos
-col1, col2 = st.columns(2)
-
-with col1:
-    nuevo_doc = st.text_input("ID del documento")
-    if st.button("Añadir documento"):
-        if nuevo_doc:
-            añadir_documento(nuevo_doc)
-        else:
-            st.warning("Introduce un ID")
-
-with col2:
+with col3:
     if st.button("Purgar base de datos"):
-        purgar_bd()
+            purgar_bd()
+
+
+# Añadir documento
+st.subheader(f"Agregar nuevo documento")
+nuevo_doc = st.text_input("ID del documento a añadir")
+
+if st.button("Añadir documento"):
+            if nuevo_doc:
+                añadir_documento(nuevo_doc)
+            else:
+                st.warning("Introduce un ID")
+
+st.subheader(f"Eliminar documento")
+del_doc = st.text_input("ID del documento a eliminar")
+
+if st.button("Eliminar documento"):
+            if del_doc:
+                delete_doc(del_doc)
+            else:
+                st.warning("Introduce un ID")
 
 st.divider()
 
-# ------------------ Paginación ------------------
-
-DOCS_POR_PAGINA = 5
-
-if "pagina" not in st.session_state:
-    st.session_state.pagina = 0
-
-inicio = st.session_state.pagina * DOCS_POR_PAGINA
-fin = inicio + DOCS_POR_PAGINA
-
-docs_pagina = documentos[inicio:fin]
 
 # ------------------ Mostrar documentos paginación ------------------
 
-for doc in docs_pagina:
+st.subheader(f"Documentos guardados")
+
+for doc in documentos:
     doc_id = doc if isinstance(doc, str) else doc.get("id", "unknown")
 
     col1, col2 = st.columns([4, 1])
@@ -179,14 +194,17 @@ for doc in docs_pagina:
 
 # ------------------ Botones Paginación ------------------
 
-col1, col2 = st.columns(2)
+col1, col2, col3 = st.columns(3)
 
 with col1:
-    if st.button("Anterior") and st.session_state.pagina > 0:
+    if st.button("Anterior") and st.session_state.pagina > 1:
         st.session_state.pagina -= 1
         st.rerun()
 
 with col2:
-    if st.button("Siguiente") and fin < total_docs:
+    st.write(f"Página {st.session_state.pagina} de {max_pages}")
+
+with col3:
+    if st.button("Siguiente") and st.session_state.pagina < max_pages:
         st.session_state.pagina += 1
         st.rerun()

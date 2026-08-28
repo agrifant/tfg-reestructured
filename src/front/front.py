@@ -44,7 +44,6 @@ st.sidebar.slider(
     on_change=update_umbral,
     help=(
         "Configura el parámetro Similarity Threshold Filtering. "
-        "Los valores más altos hacen que el filtro sea más restrictivo. "
         "Para desactivar el filtrado, establece el umbral en 0."
     )
 )
