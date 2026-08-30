@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# export NEO4J_TOKEN=tu_password
 # ./start.sh
 
 # ChromaDB

@@ -1,17 +1,19 @@
-import src.pipeline.pipeline as pipe
-import src.llm.callToLLM as llm
-import src.rag.rag as rag
+import os
+import json
+import random
+import pandas as pd
 from ragas import evaluate
 from datasets import Dataset
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.llms import Ollama
-import random
-import json
-import os
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
 from ragas.run_config import RunConfig
+from langchain_community.llms import Ollama
+from langchain_community.embeddings import HuggingFaceEmbeddings
+
+import src.llm.callToLLM as llm
+import src.pipeline.pipeline as pipe
+
+# import src.rag.rag as rag
+# import numpy as np
+# import matplotlib.pyplot as plt
 
 from ragas.metrics import (
     faithfulness,

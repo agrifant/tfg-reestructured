@@ -5,27 +5,78 @@ import requests
 
 API_URL = "http://127.0.0.1:8002"
 
-# ------------------ API CALLS ------------------
-def obtener_documentos(page):
-    #
-    #Devuleve una lista con los nombres y el número de documentos insertados
-    if page==1:
-        return ["Boe-1", "Boe-2", "Boe-3"], 11, 3
-    else:
-        return ["Boe-3", "Boe-4", "Boe-5"], 11, 3
+# ------------------ Funciones auexiliares ------------------
+@st.dialog("Aviso")
+def mensaje_aviso(name, value):
 
-    """
+    mode = "activado" if value else "desactivado"
+
+    st.warning(
+        f"Has {mode} el mecanismo **{name}**.\n\n"
+        "Ten en cuenta que los documentos procesados anteriormente "
+        "fueron tratados teniendo en cuenta la configuración anterior. "
+        "Se recomienda purgar la base de datos para aplicar correctamente "
+        "la nueva configuración a todos los documentos."
+    )
+
+    if st.button("Entendido", use_container_width=True):
+        st.rerun()
+
+@st.dialog("Aviso")
+def eliminado(exito, doc):
+    if exito == True:
+        st.warning(
+                f"Se ha eliminado exitosamente el documento **{doc}**."
+            )
+        
+        if st.button("Entendido", use_container_width=True):
+            st.rerun()
+    else:
+            st.warning(
+                    f"Error: No se ha encontrado el documento **{doc}**."
+                )
+            
+            if st.button("Entendido", use_container_width=True):
+                st.rerun()
+
+@st.dialog("Aviso")
+def confirmacionEmbedding(new_embedding):
+    st.warning(
+            f"Esta acción eliminará todos los documentos de la base de datos."
+            "Por ello, confirma que estas seguro de realizar esta acción"
+        )
+        
+    if st.button("Entendido", use_container_width=True):
+        purgar_bd()
+        change_embedding(new_embedding)
+        st.rerun()
+
+
+
+# ------------------ Api calls ------------------
+def obtener_documentos(page, max_docs_pages):
+    # Devuleve una lista con los documentos, numero de documentos totales 
+    # guardados y cuantas páginas en total tienen
     try:
-        res = requests.get(f"{API_URL}/documents")
+        res = requests.get(
+            f"{API_URL}/documents",
+            json={"page":page, "num_docs_page": max_docs_pages})
+        
         if res.status_code == 200:
-            return res.json()
+            docs_pagina = res.json().get("docs_pagina", [])
+            total_docs = res.json().get("total_docs", 0)
+            total_paginas = res.json().get("total_paginas", 0)
+
+            return docs_pagina, total_docs, total_paginas
+        
         else:
             st.error("Error al obtener documentos")
-            return []
+            return [] ,0 ,0
+        
     except Exception:
         st.error("No se pudo conectar con la API")
-        return []
-    """
+        return [], 0, 0
+    
 
 
 def eliminar_documento(doc_id):
@@ -66,45 +117,80 @@ def añadir_documento(doc_id):
     except Exception:
         st.error("Error de conexión")
 
-@st.dialog("Aviso")
-def mensaje_aviso(name, value):
-
-    mode = "activado" if value else "desactivado"
-
-    st.warning(
-        f"Has {mode} el mecanismo **{name}**.\n\n"
-        "Ten en cuenta que los documentos procesados anteriormente "
-        "fueron tratados teniendo en cuenta la configuración anterior. "
-        "Se recomienda purgar la base de datos para aplicar correctamente "
-        "la nueva configuración a todos los documentos."
-    )
-
-    if st.button("Entendido", use_container_width=True):
-        st.rerun()
-
 
 def obtener_estado():
-    #Añadir api del backend
-    return True, True
+    #Devuleve el estado de delete y unificate
+    try:
+        res_del = requests.get(
+            f"{API_URL}/mecanismoDelete"
+        )
+
+        res_un = requests.get(
+            f"{API_URL}/mecanismoUnificate"
+        )
+
+        res_dim = requests.get(
+            f"{API_URL}/dimensions"
+        )
+
+        if res_del.status_code == 200:
+            delete=res_del.json()
+        else:
+            delete=False
+
+        if res_un.status_code == 200:
+            unificate=res_un.json()
+        else:
+            unificate=False
+
+        if res_dim.status_code == 200:
+            dimensions=res_dim.json()
+        else:
+            dimensions=0
+
+        return delete, unificate, dimensions
+
+    except Exception:
+        st.error("Error de conexión")
+    return False, False, 0
 
 
 def change_delete():
-    #Añadir api del backend
     estado=st.session_state['boton_delete']
     mensaje_aviso("Legal Pruning", estado)
 
-    print(f"Delete {estado}")
-
+    try:
+        requests.post(
+            f"{API_URL}/mecanismoDelete",
+            json={"value":estado})
+        st.rerun()
+    except Exception:
+        st.error("Error de conexión")
+        st.rerun()
 
 def change_update():
-    #Añadir api del backend
     estado=st.session_state['boton_update']
     mensaje_aviso("Legal Version Update", estado)
     
-    print(f"Update {estado}")
+    try:
+        requests.post(
+            f"{API_URL}/mecanismoUnificate",
+            json={"value":estado})
+        st.rerun()
+    except Exception:
+        st.error("Error de conexión")
+        st.rerun()
 
-def delete_doc(id):
-    print(f"Eliminando doc {id}")
+def change_embedding(value):
+ 
+    try:
+        requests.post(
+        f"{API_URL}/dimensions",
+            json={"value":value})
+        st.rerun()
+    except Exception:
+        st.error("Error de conexión")
+        st.rerun()
 
 
 # ------------------ UI ------------------
@@ -113,17 +199,18 @@ st.title("Gestión de documentos")
 if "pagina" not in st.session_state:
     st.session_state.pagina = 1
     
-documentos, total_docs, max_pages = obtener_documentos(st.session_state.pagina)
-
-
-# Mostrar número de documentos
-st.subheader(f"Total de documentos guardados: {total_docs}")
-
-st.divider()
-
+documentos, total_docs, max_pages = obtener_documentos(st.session_state.pagina, 5)
 
 # Obtener el estado inicial desde una función
-delete, update = obtener_estado()
+delete, update, dimensions = obtener_estado()
+
+st.session_state["boton_delete"] = delete
+st.session_state["boton_update"] = update
+
+# Mostrar número de documentos
+st.subheader(f"Total de documentos guardados: {total_docs} con embeddings de {dimensions}")
+
+st.divider()
 
 
 # Botones de los mecanismos delete, unificate y purgar
@@ -132,7 +219,7 @@ col1, col2, col3 = st.columns(3)
 with col1:
     # El toggle SOLO muestra el estado
     st.toggle(
-        "Delete",
+        "Legal Pruning",
         value=delete,
         key="boton_delete",
         on_change=change_delete
@@ -141,7 +228,7 @@ with col1:
 
 with col2:
     boton_update = st.toggle(
-        "Update",
+        "Legal Version Update",
         value=update,
         key="boton_update",
         on_change=change_update
@@ -153,24 +240,47 @@ with col3:
             purgar_bd()
 
 
-# Añadir documento
-st.subheader(f"Agregar nuevo documento")
-nuevo_doc = st.text_input("ID del documento a añadir")
 
-if st.button("Añadir documento"):
-            if nuevo_doc:
-                añadir_documento(nuevo_doc)
-            else:
-                st.warning("Introduce un ID")
+col1, col2 = st.columns(2)
 
-st.subheader(f"Eliminar documento")
-del_doc = st.text_input("ID del documento a eliminar")
+with col1:
+    # Añadir documento
+    st.subheader(f"Agregar nuevo documento")
+    nuevo_doc = st.text_input("ID del documento a añadir")
 
-if st.button("Eliminar documento"):
-            if del_doc:
-                delete_doc(del_doc)
-            else:
-                st.warning("Introduce un ID")
+    if st.button("Añadir documento"):
+                if nuevo_doc:
+                    añadir_documento(nuevo_doc)
+                else:
+                    st.warning("Introduce un ID")
+
+with col2:
+    st.subheader(f"Eliminar documento")
+    del_doc = st.text_input("ID del documento a eliminar")
+
+    if st.button("Eliminar documento"):
+                if del_doc:
+                    out = eliminar_documento(del_doc)
+                    eliminado(out, del_doc)
+                else:
+                    st.warning("Introduce un ID")
+
+st.subheader(f"Cambiar dimensiones embeddings")
+new_embedding = st.number_input(
+    "Nuevas dimensiones del embedding",
+    min_value=1,
+    max_value=1024,
+    value=None,
+    step=1,
+    placeholder="Introduce un número entre 1 y 1024"
+)
+
+if st.button(
+    "Cambiar embedding",
+    disabled=new_embedding is None
+):
+    confirmacionEmbedding(new_embedding)
+
 
 st.divider()
 
@@ -189,8 +299,8 @@ for doc in documentos:
 
     with col2:
         if st.button("Eliminar", key=doc_id):
-            eliminar_documento(doc_id)
-            st.rerun()
+            out = eliminar_documento(doc_id)
+            eliminado(out, doc_id)
 
 # ------------------ Botones Paginación ------------------
 

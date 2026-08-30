@@ -65,18 +65,35 @@ class rag():
         else:
             return callToLLM.make_rag_question(query, texts)
 
+
+    def getMinThreshold(self):
+        return self.min_theshold
+
     def changeMinThreshold(self, threshold):
         self.min_theshold=threshold
+
+    
+    def getDerogations(self):
+        return self.delete_derrogations
 
     def changeDerogations(self, derogation):
         self.delete_derrogations=derogation
 
+
+    def getUnificate(self):
+        return self.unificated_versions
+    
     def changeUnificate(self, unificate):
         self.unificated_versions=unificate
 
-    def change_top_k(self, new_top):
-        self.nRetrieval=new_top
+
+    def get_dim(self):
+        return self.dim
 
     def change_dim(self, new_dim):
         self.dim=new_dim
+
+
+    def change_top_k(self, new_top):
+        self.nRetrieval=new_top
         

@@ -3,6 +3,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import src.rag.rag as rag
 import traceback
+import math
 
 # Inicializamos el rag
 maquina = rag.rag()
@@ -13,8 +14,26 @@ app = FastAPI(title="TFG API")
 class IdRequest(BaseModel):
     id_documento: str
 
+
 class QueryRequest(BaseModel):
     query: str
+
+
+class boleanRequest(BaseModel):
+    value: bool
+
+
+class floatRequest(BaseModel):
+    value: float
+
+class intRequest(BaseModel):
+    value: int
+
+
+class pageRequest(BaseModel):
+    page: int
+    num_docs_page: int
+
 
 @app.post("/preguntar")
 def preguntar_api(req: QueryRequest):
@@ -25,6 +44,7 @@ def preguntar_api(req: QueryRequest):
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.post("/addDocument")
 def addDocument(req: IdRequest):
     try:
@@ -33,6 +53,7 @@ def addDocument(req: IdRequest):
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+
     
 @app.post("/deleteDocument")
 def deleteDocument(req: IdRequest):
@@ -42,6 +63,7 @@ def deleteDocument(req: IdRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.post("/purgar")
 def purgarBD():
     try:
@@ -50,11 +72,107 @@ def purgarBD():
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
-    
+
+
 @app.get("/documents")
-def listarDocuments():
+def listarDocuments(req: pageRequest):
     try:
-        return maquina.print_all_document()
+        docs = maquina.print_all_document()
+
+        #Calcular numero de páginas
+        total_docs = len(docs)
+        total_paginas = math.ceil(total_docs / req.num_docs_page)
+
+        #Calcular documentos devueltos
+        inicio = (req.page - 1) * req.num_docs_page
+        fin = inicio + req.num_docs_page
+
+        docs_pagina = docs[inicio:fin]
+
+        out={
+            "docs_pagina": docs_pagina,
+            "total_docs": total_docs,
+            "total_paginas": total_paginas
+        }
+
+        return out
+    
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/mecanismoDelete")
+def getDelete():
+    try:
+        return maquina.getDerogations()
+    
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/mecanismoDelete")
+def postDelete(req: boleanRequest):
+    try:
+        maquina.changeDerogations(req.value)
+    
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/mecanismoUnificate")
+def getUnificate():
+    try:
+        return maquina.getUnificate()
+    
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/mecanismoUnificate")
+def postUnificate(req: boleanRequest):
+    try:
+        maquina.changeUnificate(req.value)
+    
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/mecanismoThreshold")
+def getThreshold():
+    try:
+        return maquina.getMinThreshold()
+    
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/mecanismoThreshold")
+def postThreshold(req: floatRequest):
+    try:
+        maquina.changeMinThreshold(req.value)
+    
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/dimensions")
+def getDimensions():
+    try:
+        return maquina.get_dim()
+    
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/dimensions")
+def postDimensions(req: intRequest):
+    try:
+        maquina.change_dim(req.value)
+    
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
