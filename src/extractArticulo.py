@@ -1,5 +1,6 @@
 import re
 
+# Patrones que reconocen si un texto contiene un artículo
 patterns = [
     re.compile(r'\bart[ií]culo\s*(\d+(\.\d+)?\s*(bis|ter|quater|quinquies)?)', re.IGNORECASE),
     re.compile(r'\bart\.?\s*(\d+(\.\d+)?)', re.IGNORECASE),
@@ -9,13 +10,35 @@ patterns = [
 
 
 def extract_articulo(text: str) -> str | None:
+    """
+    Extrae el artículo de un texto utilizando una serie de patrones
+    de búsqueda.
+
+    Args:
+        text (str): Texto del que se quiere extraer el artículo.
+
+    Returns:
+        str | None: Contenido del artículo encontrado. Devuelve None
+                    si no se encuentra ningún artículo.
+    """
     for p in patterns:
         match = p.search(text)
         if match:
-            return match.group(1)  # 👈 clave aquí
+            return match.group(1)
     return None
 
 def extract_articulos_more_than_one(text: str) -> list[str]:
+    """
+    Extrae todos los artículos encontrados en un texto utilizando
+    una serie de patrones de búsqueda.
+
+    Args:
+        text (str): Texto del que se quieren extraer los artículos.
+
+    Returns:
+        list[str]: Lista de artículos encontrados, eliminando duplicados
+                y normalizando el texto a minúsculas.
+    """
     results = set()
 
     for p in patterns:

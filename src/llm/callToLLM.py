@@ -124,5 +124,3 @@ def make_rag_question(query: str, chunks):
     
     addToHistory(query, response)
     return response
-
-#Funciones relacionadas con delete_document

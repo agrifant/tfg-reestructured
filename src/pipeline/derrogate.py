@@ -4,10 +4,36 @@ import src.pipeline.utils as utils
 import src.llm.callToLLM as llm
 
 def es_disposicion_derrogatoria(texto: str) -> bool:
+    """
+    Comprueba si un texto contiene la expresión "disposición derogatoria".
+
+    Args:
+        texto (str): Texto en el que se quiere comprobar la existencia
+                    de una disposición derogatoria.
+
+    Returns:
+        bool: True si el texto contiene "disposición derogatoria".
+            False en caso contrario.
+    """
     patron = r"\bdisposici[oó]n\s+derogatoria\b"
     return re.search(patron, texto, re.IGNORECASE) is not None
 
 def identificar_derrogaciones(text:str)->list[json]:
+    """
+    Identifica las derogaciones expresas presentes en un texto jurídico
+    utilizando un modelo de lenguaje y devuelve la información
+    estructurada en formato JSON.
+
+    Args:
+        text (str): Texto jurídico del que se quieren extraer las derogaciones.
+
+    Returns:
+        list[json]: Lista de objetos JSON con la norma afectada y los artículos
+                    que se derogan. Devuelve una lista vacía si no se encuentran
+                    derogaciones válidas o si no se obtiene una respuesta válida
+                    tras varios intentos.
+    """
+
     intentos=3
     intento=0
     format = {
@@ -83,8 +109,16 @@ def identificar_derrogaciones(text:str)->list[json]:
 
 def extraer_numeros_leyes_modificadas(texto: dict):
     """
-    Extrae todos los números de 'que_afecta' en una lista.
-    Incluye: artículos con decimales, números simples y combinaciones tipo 29.1.a
+    Extrae los números de los artículos indicados en el texto.
+
+    Args:
+        texto (dict): Texto del que se quieren extraer los números de los
+                    artículos afectados.
+
+    Returns:
+        list[str]: Lista de números de artículos encontrados, incluyendo
+                números simples, artículos con decimales y combinaciones
+                como "29.1.a".
     """
     
     patron = r"\d+(?:\.\d+)*(?:\.[a-z])?\)?"
@@ -94,6 +128,21 @@ def extraer_numeros_leyes_modificadas(texto: dict):
     return [r.rstrip(")") for r in resultados]
     
 def limpiarSalidaLLM(data):
+    """
+    Limpia y normaliza la salida generada por el modelo de lenguaje,
+    extrayendo la ley afectada y transformando los artículos indicados
+    en un formato estructurado.
+
+    Args:
+        data (list): Lista de derogaciones generadas por el modelo,
+                    con la norma afectada y los elementos que se derogan.
+
+    Returns:
+        list: Lista de diccionarios con las derogaciones normalizadas.
+            Las derogaciones totales se identifican por tipo "ley",
+            mientras que las derogaciones de artículos se identifican
+            por tipo "articulo".
+    """
     out=[]
     for i in data:
         ley=utils.extraer_ley(i["target_norma"])
@@ -110,6 +159,23 @@ def limpiarSalidaLLM(data):
     return out
 
 def main_derrogate(BD, disposiciones):
+    """
+    Identifica y procesa las derogaciones contenidas en un conjunto de
+    disposiciones, utilizando un LLM para detectar las normas y artículos
+    derogados y actualizando su estado en la base de datos.
+
+    Args:
+        BD: Base de datos sobre la que se actualizará el estado de las normas
+            y artículos derogados.
+
+        disposiciones (list): Lista de disposiciones que se analizarán para
+                            identificar aquellas que contienen derogaciones.
+
+    Returns:
+        tuple: Número de normas completas y número de artículos cuyo estado
+            se ha actualizado correctamente a "derrogado".
+    """
+    
     to_delete=[]
     derrogaciones=[]
     #Identificamos la disposición de las derrogaciones

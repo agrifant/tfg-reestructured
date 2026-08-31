@@ -7,14 +7,6 @@ from datasets import Dataset
 from ragas.run_config import RunConfig
 from langchain_community.llms import Ollama
 from langchain_community.embeddings import HuggingFaceEmbeddings
-
-import src.llm.callToLLM as llm
-import src.pipeline.pipeline as pipe
-
-# import src.rag.rag as rag
-# import numpy as np
-# import matplotlib.pyplot as plt
-
 from ragas.metrics import (
     faithfulness,
     answer_relevancy,
@@ -22,6 +14,11 @@ from ragas.metrics import (
     context_precision
 )
 
+import src.llm.callToLLM as llm
+import src.pipeline.pipeline as pipe
+
+
+# Modelo de embedding usado para la evaluación con RAGAs 
 embeddings = HuggingFaceEmbeddings(
         model_name="jinaai/jina-embeddings-v3",
         model_kwargs={
@@ -33,10 +30,26 @@ embeddings = HuggingFaceEmbeddings(
         },
     )
 
+# Modelo de LLM usado para la evaluación con RAGAs
 llm = Ollama(model="llama3.1:8b")
 
-
+# Funciones para generar el dataset de prueba
 def make_question(texts:str)->list[json]:
+    """
+    Función que genera una pregunta y respuesta a partir
+    de un texto legislativo proporcionado.
+
+    Args:
+        texts (str): Texto legislativo del cual se 
+                            va a sacar la pregunta y respuesta.
+    
+    Returns:
+        (json): La pregunta y respuesta generada en formato json
+        {
+            "question": ...,
+            "ground_truth": ...,
+        }
+    """
     intentos=3
     intento=0
     
@@ -104,8 +117,26 @@ def make_question(texts:str)->list[json]:
                 print("salida forzada")
                 return []
     
-
 def generarPreguntas(question_num, output_file, id_boe="BOE-A-2015-3439"):
+    """
+    Función que genera de un documento del BOE
+    genera un dataset con preguntas sobre sus 
+    artículos y disposiciones en un .jsonl
+    
+    Args:
+        question_num (int): Número de preguntas a genera 
+                                en el dataset.
+
+        output_file (str): Nonmbre y ruta del archivo que 
+                            se generará con el dataset .
+
+        id_boe (str): Id del documento del BOE del cual se van a 
+                        coger los textos para generar las preguntas
+                        y respuestas.
+    Returns:
+        (void): El datasets con las preguntas y respuestas en la ruta
+                especificada.
+    """
     # Obtenemos el documento del que queremos hacer las preguntas
     documento = pipe.generarContextoPreguntas(id_boe)
     
@@ -131,14 +162,26 @@ def generarPreguntas(question_num, output_file, id_boe="BOE-A-2015-3439"):
 
     print(f"Dataset guardado en {output_file}")
 
-def count_articles(id_boe="BOE-A-2015-3439"):
-    # Obtenemos el documento del que queremos hacer las preguntas
-    documento = pipe.generarContextoPreguntas(id_boe)
-
-    print(len(documento))
-
-        
+#Funciones para hacer los test con RAGAs    
 def ResponderPreguntas(maquina, output_file, percent):
+    """
+    Función que lee un fichero .jsonl y responde las preguntas
+    utilizando el RAG.
+
+    Args:
+        maquina (class): El RAG que se utilizará para responder las preguntas.
+
+        output_file (str): Nombre del fichero .jsonl que contiene
+                           las preguntas.
+
+        percent (int): Porcentaje, entre 1 y 100, de elementos que se desea
+                       responder.
+
+    Returns:
+        Dataset: Dataset de Hugging Face que contiene las preguntas 
+                    originales junto con sus respuestas y contextos.
+    """
+
     with open(output_file, "r", encoding="utf-8") as f:
         lines = f.readlines()
 
@@ -162,6 +205,23 @@ def ResponderPreguntas(maquina, output_file, percent):
     return Dataset.from_list(all_questions_responded)
 
 def guardarResultados(rows, carpeta, filename):
+    """ 
+    Guarda los resultados en un fichero CSV. 
+    Si el fichero ya existe, añade los nuevos resultados al final. 
+    Si no existe, crea el fichero e incluye los nombres de las columnas. 
+
+    Args: 
+        rows (list): Lista de resultados que se quieren guardar. 
+                        Cada elemento debe poder convertirse en una fila de un DataFrame. 
+
+        carpeta (str): Ruta de la carpeta donde se guardará el fichero CSV. 
+                        Si la carpeta no existe, se crea automáticamente. 
+
+        filename (str): Nombre del fichero CSV donde se guardarán los resultados. 
+        
+    Returns: None: No devuelve ningún valor. 
+                Guarda los resultados directamente en el fichero CSV. 
+    """
     os.makedirs(carpeta, exist_ok=True)
 
     ruta = os.path.join(carpeta, filename)
@@ -178,8 +238,34 @@ def guardarResultados(rows, carpeta, filename):
         encoding="utf-8"
     )
 
-    
 def ejecutarTest(maquina, name, carpet, filename, filename_test, percent=100):
+    """
+    Ejecuta un test sobre el RAG, evaluando las respuestas generadas
+    mediante diferentes métricas y guardando los resultados en un fichero CSV.
+
+    Args:
+        maquina: Instancia del RAG que se utilizará para responder
+                 las preguntas.
+
+        name (str): Nombre o identificador del RAG que se está evaluando.
+
+        carpet (str): Ruta de la carpeta donde se guardarán los resultados.
+
+        filename (str): Nombre del fichero CSV donde se guardarán
+                        los resultados de la evaluación.
+
+        filename_test (str): Nombre del fichero .jsonl que contiene
+                             las preguntas del test.
+
+        percent (int, optional): Porcentaje, entre 1 y 100, de preguntas
+                                 que se desea utilizar en el test.
+                                 Por defecto, 100.
+
+    Returns:
+        None: No devuelve ningún valor. Guarda los resultados de las métricas
+              de evaluación en un fichero CSV.
+    """
+
     #Respondemos las preguntas:
     print("Respondiendo preguntas")
     data= ResponderPreguntas(maquina, filename_test, percent)
@@ -187,8 +273,10 @@ def ejecutarTest(maquina, name, carpet, filename, filename_test, percent=100):
     metrics = [faithfulness, answer_relevancy, context_recall, context_precision]
 
     all_rows = []
-    
+
+    # Se raliza una evaluación por cada métrica
     for metric in metrics:
+        # Realizamos la evaluazión con RAGAs
         result = evaluate(
             data,
             metrics=[metric],
@@ -198,19 +286,10 @@ def ejecutarTest(maquina, name, carpet, filename, filename_test, percent=100):
                 max_workers=1
             )
         )
-    
+
+        # Guardamos los resultados en una lista
         df = result.to_pandas()
     
-        score_cols = [
-            "faithfulness",
-            "answer_relevancy",
-            "context_recall",
-            "context_precision"
-        ]
-    
-
-        df = result.to_pandas()
-
         col = metric.name
     
         values = pd.to_numeric(df[col], errors="coerce")
@@ -226,4 +305,5 @@ def ejecutarTest(maquina, name, carpet, filename, filename_test, percent=100):
                 "value": float(value)
             })
 
+    # Guardamos los resultados de las evaluaciones
     guardarResultados(all_rows, carpet, filename)

@@ -5,8 +5,6 @@ import src.llm.callToLLM as llm
 import json
 
 def unifacte_norma(old_text, new_text)->list[json]:
-    intentos=3
-    intento=0
 
     system_prompt = """
         Eres un experto en consolidación legislativa.

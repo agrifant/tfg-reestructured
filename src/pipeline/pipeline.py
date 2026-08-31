@@ -10,6 +10,26 @@ import os
 # python3 -m src.pipeline.pipeline
 
 def pipeline(documento: str, BD, delete_derrogations:bool, unificated_versions:bool, dim:int)-> tuple:
+    """
+    Ejecuta el pipeline completo de extracción y procesamiento de datos
+    del documento y almacena los resultados en la base de datos.
+
+    Args:
+        documento (str): Documento que se procesará mediante el pipeline.
+
+        BD: Base de datos en la que se almacenarán los resultados obtenidos.
+
+        delete_derrogations (bool): Indica si se deben procesar y aplicar
+                                    las derogaciones detectadas.
+
+        unificated_versions (bool): Indica si se deben unificar las diferentes
+                                    versiones de las normas.
+
+        dim (int): Dimensión utilizada en el embedding en la BD.
+
+    Returns:
+        bool: Si se ha podido realizar exitosamente o no
+    """
     art_unificated=0
 
     #Obtenemos el fichero del BOE en formato XML
@@ -91,6 +111,15 @@ def pipeline(documento: str, BD, delete_derrogations:bool, unificated_versions:b
     return BD.addDocument(articulos_chunked, disposiciones_chunked, texto_extra_chunked, documento, dim), art_unificated, art_delete, files_delete
 
 def generarContextoPreguntas(documento:str)->list:
+    """
+    Extre sobre el documento indicado los artículos y disposiciones.
+
+    Args:
+        documento (str): Identificador del BOE que se procesará mediante el pipeline.
+
+    Returns:
+        bool: Lista de los diferentes artículos y disposiciones detectadas
+    """
     #Función que obtiene el boe que queremos
     boe_file = fetcher.obtenerXML(documento)
 
