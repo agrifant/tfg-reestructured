@@ -1,7 +1,0 @@
-streamlit
-fastapi
-lxml
-ollama
-chromadb
-sentence_transformers
-einops
