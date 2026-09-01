@@ -9,7 +9,6 @@ st.sidebar.header("Configuración")
 
 # ------------------ API CALLS ------------------
 def get_umbral():
-    #Añadir api del backend
     try:
         threshold = requests.get(
             f"{API_URL}/mecanismoThreshold"
@@ -27,6 +26,22 @@ def get_umbral():
         st.error("Error de conexión")
     return 0
 
+def get_memoria():
+    try:
+        res = requests.get(
+            f"{API_URL}/memory"
+        )
+
+        if res.status_code == 200:
+            value=res.json()
+        else:
+            value=False
+
+        return value
+    
+    except Exception:
+        st.error("Error de conexión")
+    return 0    
 
 def update_umbral():
     valor = st.session_state["umbral"]
@@ -35,11 +50,23 @@ def update_umbral():
         requests.post(
             f"{API_URL}/mecanismoThreshold",
             json={"value":valor})
-
+        st.rerun()
+        
     except Exception:
         st.session_state["umbral"] = 0.0
         st.error("Error de conexión")
-    
+
+def changeHistorial():
+    valor = st.session_state["memoria"]
+
+    try:
+        requests.post(
+            f"{API_URL}/memory",
+            json={"value":valor})
+        st.rerun()
+
+    except Exception:
+        st.error("Error de conexión")
 
 def get_rag_response(pregunta):
     try:
@@ -53,9 +80,8 @@ def get_rag_response(pregunta):
 # -------------------- Configuración del umbral --------------------
 
 # Obtener el umbral actual del backend
-if "umbral" not in st.session_state:
-    st.session_state.umbral = get_umbral()
-
+st.session_state.umbral = get_umbral()
+st.session_state.memoria = get_memoria()
 
 # barra elección umbral
 st.sidebar.slider(
@@ -71,6 +97,13 @@ st.sidebar.slider(
     )
 )
 
+
+# Botón historial
+st.toggle(
+    "Memoria",
+    key="memoria",
+    on_change=changeHistorial
+)
 
 # -------------------- Sección de Chat --------------------
 if "mensajes" not in st.session_state:

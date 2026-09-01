@@ -176,3 +176,21 @@ def postDimensions(req: intRequest):
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/memory")
+def getDimensions():
+    try:
+        return maquina.getMemory()
+    
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/memory")
+def postDimensions(req: boleanRequest):
+    try:
+        maquina.change_memory(req.value)
+    
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))

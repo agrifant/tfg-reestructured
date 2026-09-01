@@ -114,13 +114,20 @@ def pront_ask_rag(contexto_completo, query, history_text):
     ]
 
 
-def make_rag_question(query: str, chunks):
+def make_rag_question(query: str, chunks, memory=True):
     global history_text
+
     contexto_completo="\n\n".join(chunks)
     #Escribirmos el promt
     prompt=pront_ask_rag(contexto_completo, query, history_text)
 
+    #Responde el llm la pregunta con el contexto
     response=call_ollama(prompt, None, 300)
+
+    #Si la memoria está activada se guarda
+    if memory:
+        addToHistory(query, response)
+    else:
+        history_text=[]
     
-    addToHistory(query, response)
     return response

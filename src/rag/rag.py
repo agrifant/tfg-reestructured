@@ -9,6 +9,7 @@ class rag():
         self.delete_derrogations=delete
         self.unificated_versions=unificate
         self.min_theshold=threshold
+        self.memory=True
         self.dim=1024
         
 
@@ -63,8 +64,7 @@ class rag():
         if is_testing:
             return callToLLM.make_rag_question(query, texts), texts
         else:
-            return callToLLM.make_rag_question(query, texts)
-
+            return callToLLM.make_rag_question(query, texts, self.memory)
 
     def getMinThreshold(self):
         return self.min_theshold
@@ -72,13 +72,11 @@ class rag():
     def changeMinThreshold(self, threshold):
         self.min_theshold=threshold
 
-    
     def getDerogations(self):
         return self.delete_derrogations
 
     def changeDerogations(self, derogation):
         self.delete_derrogations=derogation
-
 
     def getUnificate(self):
         return self.unificated_versions
@@ -86,14 +84,19 @@ class rag():
     def changeUnificate(self, unificate):
         self.unificated_versions=unificate
 
-
     def get_dim(self):
         return self.dim
 
     def change_dim(self, new_dim):
         self.dim=new_dim
 
+    def getMemory(self):
+        return self.memory
+
+    def change_memory(self, new_value):
+        self.memory=new_value
 
     def change_top_k(self, new_top):
         self.nRetrieval=new_top
+
         
