@@ -10,13 +10,36 @@ st.sidebar.header("Configuración")
 # ------------------ API CALLS ------------------
 def get_umbral():
     #Añadir api del backend
-    return 0.4
+    try:
+        threshold = requests.get(
+            f"{API_URL}/mecanismoThreshold"
+        )
+
+        if threshold.status_code == 200:
+            value=threshold.json()
+        else:
+            value=0
+
+
+        return value
+    
+    except Exception:
+        st.error("Error de conexión")
+    return 0
 
 
 def update_umbral():
-    #Añadir api del backend
-    print("Actualizando ...")
+    valor = st.session_state["umbral"]
+    
+    try:
+        requests.post(
+            f"{API_URL}/mecanismoThreshold",
+            json={"value":valor})
 
+    except Exception:
+        st.session_state["umbral"] = 0.0
+        st.error("Error de conexión")
+    
 
 def get_rag_response(pregunta):
     try:

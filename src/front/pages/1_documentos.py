@@ -19,9 +19,6 @@ def mensaje_aviso(name, value):
         "la nueva configuración a todos los documentos."
     )
 
-    if st.button("Entendido", use_container_width=True):
-        st.rerun()
-
 @st.dialog("Aviso")
 def eliminado(exito, doc):
     if exito == True:
@@ -157,29 +154,27 @@ def obtener_estado():
 
 def change_delete():
     estado=st.session_state['boton_delete']
-    mensaje_aviso("Legal Pruning", estado)
 
     try:
         requests.post(
             f"{API_URL}/mecanismoDelete",
             json={"value":estado})
-        st.rerun()
+        mensaje_aviso("Legal Pruning", estado)
     except Exception:
         st.error("Error de conexión")
-        st.rerun()
+
 
 def change_update():
     estado=st.session_state['boton_update']
-    mensaje_aviso("Legal Version Update", estado)
     
     try:
         requests.post(
             f"{API_URL}/mecanismoUnificate",
             json={"value":estado})
-        st.rerun()
+        mensaje_aviso("Legal Version Update", estado)
     except Exception:
         st.error("Error de conexión")
-        st.rerun()
+
 
 def change_embedding(value):
  
@@ -208,7 +203,7 @@ st.session_state["boton_delete"] = delete
 st.session_state["boton_update"] = update
 
 # Mostrar número de documentos
-st.subheader(f"Total de documentos guardados: {total_docs} con embeddings de {dimensions}")
+st.subheader(f"{total_docs} documentos guardados con embeddings de {dimensions} dimensiones")
 
 st.divider()
 
@@ -265,7 +260,7 @@ with col2:
                 else:
                     st.warning("Introduce un ID")
 
-st.subheader(f"Cambiar dimensiones embeddings")
+st.subheader(f"Cambiar dimensiones embeddings (Actual={dimensions})")
 new_embedding = st.number_input(
     "Nuevas dimensiones del embedding",
     min_value=1,

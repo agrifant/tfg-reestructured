@@ -5,4 +5,5 @@ bakups/
 .start.sh.swp
 .ipynb_checkpoints
 .ipynb_checkpoints
+__pycache__/
 noMostrar/
