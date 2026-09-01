@@ -6,6 +6,19 @@ import requests
 API_URL = "http://127.0.0.1:8002"
 
 # ------------------ Funciones auexiliares ------------------
+def mostrar_mensaje():
+    if "mensaje" in st.session_state:
+        tipo, texto = st.session_state.pop("mensaje")
+
+        if tipo == "success":
+            st.success(texto)
+        elif tipo == "error":
+            st.error(texto)
+        elif tipo == "warning":
+            st.warning(texto)
+        elif tipo == "info":
+            st.info(texto)
+
 @st.dialog("Aviso")
 def mensaje_aviso(name, value):
 
@@ -69,11 +82,24 @@ def eliminar_documento(doc_id):
             exito = res.json().get("respuesta", [])
                         
             if exito==True:
-                st.success(f"Añadido correctamente documento: {doc_id}")
-
+                st.session_state["mensaje"] = (
+                    "success",
+                    f"Documento añadido correctamente: {doc_id}"
+                )
+                st.rerun()
+            else:
+                st.session_state["mensaje"] = (
+                    "error",
+                    f"No se ha podido eliminar documento: {doc_id}"
+                )
+                st.rerun()
         else:
-            st.error(f"No se ha podido eliminar documento: {doc_id}")
-
+            st.session_state["mensaje"] = (
+                "error",
+                f"No se ha podido eliminar documento: {doc_id}"
+            )
+            st.rerun()
+            
     except Exception:
         st.error("Error de conexión")
 
@@ -82,12 +108,20 @@ def purgar_bd():
     try:
         res = requests.post(f"{API_URL}/purgar")
         if res.status_code == 200:
-            res.json().get("respuesta", [])
-        
-            st.success(f"Base de datos purgada")
+
+            st.session_state["mensaje"] = (
+                "success",
+                f"Base de datos purgada"
+            )
+            st.rerun()
             
         else:
-            st.error("Error al purgar")
+            st.session_state["mensaje"] = (
+                "error",
+                f"Error al purgar la base de datos"
+            )
+            st.rerun()
+
     except Exception:
         st.error("Error de conexión")
 
@@ -101,11 +135,25 @@ def añadir_documento(doc_id):
         if res.status_code == 200:
             exito = res.json().get("respuesta", [])
             if exito==True:
-                st.success(f"Añadido correctamente documento: {doc_id}")
+                st.session_state["mensaje"] = (
+                    "success",
+                    f"Añadido correctamente documento: {doc_id}"
+                )
+                st.rerun()
+                
             else:
-                st.error(f"Error al añadir el documento: {doc_id}")
+                st.session_state["mensaje"] = (
+                    "error",
+                    f"Error al añaidir el documento: {doc_id}"
+                )
+                st.rerun()
         else:
-            st.error("Error al añadir")
+            st.session_state["mensaje"] = (
+                "error",
+                f"Error al añaidir el documento: {doc_id}"
+            )
+            st.rerun()
+            
     except Exception:
         st.error("Error de conexión")
 
@@ -174,9 +222,23 @@ def change_update():
 def change_embedding(value):
  
     try:
-        requests.post(
+        res=requests.post(
         f"{API_URL}/dimensions",
             json={"value":value})
+
+        if res.status_code == 200:
+
+            st.session_state["mensaje"] = (
+                "success",
+                f"Embedding cambiado a {value} dimensiones"
+            )
+            st.rerun()
+        else:
+            st.session_state["mensaje"] = (
+                "error",
+                f"Error cambiado a {value} dimensiones"
+            )
+            st.rerun()
 
     except Exception:
         st.error("Error de conexión")
@@ -196,6 +258,9 @@ delete, update, dimensions = obtener_estado()
 
 st.session_state["boton_delete"] = delete
 st.session_state["boton_update"] = update
+
+#Mostramos los mensajes que hayan
+mostrar_mensaje()
 
 # Mostrar número de documentos
 st.subheader(f"{total_docs} documentos guardados con embeddings de {dimensions} dimensiones")
