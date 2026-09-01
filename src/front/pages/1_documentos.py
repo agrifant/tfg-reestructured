@@ -39,7 +39,7 @@ def confirmacionEmbedding(new_embedding):
             "Por ello, confirma que estas seguro de realizar esta acción"
         )
         
-    if st.button("Entendido", use_container_width=True):
+    if st.button("Confirmar", use_container_width=True):
         purgar_bd()
         change_embedding(new_embedding)
         st.rerun()
