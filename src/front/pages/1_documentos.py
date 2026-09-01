@@ -113,14 +113,12 @@ def purgar_bd():
                 "success",
                 f"Base de datos purgada"
             )
-            st.rerun()
             
         else:
             st.session_state["mensaje"] = (
                 "error",
                 f"Error al purgar la base de datos"
             )
-            st.rerun()
 
     except Exception:
         st.error("Error de conexión")
@@ -292,7 +290,8 @@ with col2:
 
 with col3:
     if st.button("Purgar base de datos"):
-            purgar_bd()
+        purgar_bd()
+        st.rerun()
 
 
 
