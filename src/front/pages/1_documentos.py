@@ -20,23 +20,6 @@ def mensaje_aviso(name, value):
     )
 
 @st.dialog("Aviso")
-def eliminado(exito, doc):
-    if exito == True:
-        st.warning(
-                f"Se ha eliminado exitosamente el documento **{doc}**."
-            )
-        
-        if st.button("Entendido", use_container_width=True):
-            st.rerun()
-    else:
-            st.warning(
-                    f"Error: No se ha encontrado el documento **{doc}**."
-                )
-            
-            if st.button("Entendido", use_container_width=True):
-                st.rerun()
-
-@st.dialog("Aviso")
 def confirmacionEmbedding(new_embedding):
     st.warning(
             f"Esta acción eliminará todos los documentos de la base de datos."
@@ -83,9 +66,14 @@ def eliminar_documento(doc_id):
             json={"id_documento": doc_id}
         )
         if res.status_code == 200:
-            st.success(f"{doc_id} eliminado")
+            exito = res.json().get("respuesta", [])
+                        
+            if exito==True:
+                st.success(f"Añadido correctamente documento: {doc_id}")
+
         else:
-            st.error("Error al eliminar")
+            st.error(f"No se ha podido eliminar documento: {doc_id}")
+
     except Exception:
         st.error("Error de conexión")
 
@@ -94,12 +82,10 @@ def purgar_bd():
     try:
         res = requests.post(f"{API_URL}/purgar")
         if res.status_code == 200:
-            exito = res.json().get("respuesta", [])
+            res.json().get("respuesta", [])
+        
+            st.success(f"Base de datos purgada")
             
-            if exito==True:
-                st.success(f"Añadido correctamente documento: {doc_id}")
-            else:
-                st.error(f"Añadido correctamente documento: {doc_id}")
         else:
             st.error("Error al purgar")
     except Exception:
@@ -117,8 +103,7 @@ def añadir_documento(doc_id):
             if exito==True:
                 st.success(f"Añadido correctamente documento: {doc_id}")
             else:
-                st.error(f"Añadido correctamente documento: {doc_id}")
-            st.rerun()
+                st.error(f"Error al añadir el documento: {doc_id}")
         else:
             st.error("Error al añadir")
     except Exception:
@@ -192,10 +177,10 @@ def change_embedding(value):
         requests.post(
         f"{API_URL}/dimensions",
             json={"value":value})
-        st.rerun()
+
     except Exception:
         st.error("Error de conexión")
-        st.rerun()
+
 
 
 # ------------------ UI ------------------
@@ -266,7 +251,6 @@ with col2:
     if st.button("Eliminar documento"):
                 if del_doc:
                     out = eliminar_documento(del_doc)
-                    eliminado(out, del_doc)
                 else:
                     st.warning("Introduce un ID")
 
@@ -305,7 +289,6 @@ for doc in documentos:
     with col2:
         if st.button("Eliminar", key=doc_id):
             out = eliminar_documento(doc_id)
-            eliminado(out, doc_id)
 
 # ------------------ Botones Paginación ------------------
 
