@@ -50,8 +50,7 @@ def update_umbral():
         requests.post(
             f"{API_URL}/mecanismoThreshold",
             json={"value":valor})
-        st.rerun()
-        
+
     except Exception:
         st.session_state["umbral"] = 0.0
         st.error("Error de conexión")
@@ -63,7 +62,6 @@ def changeHistorial():
         requests.post(
             f"{API_URL}/memory",
             json={"value":valor})
-        st.rerun()
 
     except Exception:
         st.error("Error de conexión")
@@ -99,7 +97,7 @@ st.sidebar.slider(
 
 
 # Botón historial
-st.toggle(
+st.sidebar.toggle(
     "Memoria",
     key="memoria",
     on_change=changeHistorial
