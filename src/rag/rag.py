@@ -44,10 +44,10 @@ class rag():
         return True
 
     def purgarBasesDatos(self)-> None:
-        self.BD.purge()
+        return self.BD.purge()
     
     def deleteDocument(self, id_documento: str)-> None:
-        print(self.BD.deleteDocument(id_documento))
+        return self.BD.deleteDocument(id_documento)
     
     def print_all_document(self)-> list[str]:
         resultados = self.BD.listDocuments()

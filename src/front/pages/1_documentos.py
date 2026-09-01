@@ -94,7 +94,12 @@ def purgar_bd():
     try:
         res = requests.post(f"{API_URL}/purgar")
         if res.status_code == 200:
-            st.rerun()
+            exito = res.json().get("respuesta", [])
+            
+            if exito==True:
+                st.success(f"Añadido correctamente documento: {doc_id}")
+            else:
+                st.error(f"Añadido correctamente documento: {doc_id}")
         else:
             st.error("Error al purgar")
     except Exception:
@@ -108,6 +113,11 @@ def añadir_documento(doc_id):
             json={"id_documento": doc_id}
         )
         if res.status_code == 200:
+            exito = res.json().get("respuesta", [])
+            if exito==True:
+                st.success(f"Añadido correctamente documento: {doc_id}")
+            else:
+                st.error(f"Añadido correctamente documento: {doc_id}")
             st.rerun()
         else:
             st.error("Error al añadir")
